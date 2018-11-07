@@ -25,7 +25,7 @@ mvc和ef搭建框架1
 
    3.建立Cache缓存文件夹，缓存类，分布式缓存 ，本内存缓存，memecache，redis，等等  
       a.ICacheManager,缓存要抽象，为什么？因为缓存的地方不一样，所以要抽象，是一个接口 ICacheManager
-	  其中也是增删改查 【Get(获取)，Set(设置，一般存在就覆盖)，Contains(是否存在),Clear(清	          空)】
+	  其中也是增删改查 【Get(获取)，Set(设置，一般存在就覆盖)，Contains(是否存在),Clear(清 空)】
       b.NullCacheManager，空缓存，替换内存缓存，redis	  如果用户不需要缓存，默认就注入进去即	可
       c.MemoryCacheManager,内存缓存【微软新增的内存缓存，需要引用System.Runtime.Caching】，	  就需要实现ICacheManager接口，具体请看代码。方法有【Clear，Get,Set，Remove，Set】
       d.RedisCacheManager,需要实现ICacheManager接口，通过命令的方式安装 Stackexchange.redis包，选择CarManager.Core
@@ -48,6 +48,8 @@ mvc和ef搭建框架1
      c.PageConfig.cs,
    4.安装unity容器。nugte上找到安装unity mvc 的命令  Instal-Package Unity.Mvc，安装在CarManager.Web项目下
    5.在CarManager.core中创建Log文件夹，mvc推荐使用NLog 不是log4，命令方式安装  Install-Package NLog -Pre
+	a.ILogger 接口
+	b.NullLogger
 
        
    
