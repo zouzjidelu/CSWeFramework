@@ -1,0 +1,13 @@
+1.在向github仓库推送文件时，报一下错误：
+Git failed with a fatal error.
+error: open("ConsoleApp1/.vs/ConsoleApp1/v15/Server/sqlite3/db.lock"): Permission denied
+fatal: Unable to process path ConsoleApp1/.vs/ConsoleApp1/v15/Server/sqlite3/db.lock
+解决方案：
+
+https://blog.csdn.net/lisiyi523897080/article/details/80476386
+
+因为git上传要忽略vs文件， Git因致命错误而失败。权限被拒绝 无法处理的路径。
+
+解决方法下：进入项目的目录下，点击右键单击【git bash】，输入命令： touch .gitignore 创建文件
+打开文件 输入 .vs     保存。
+2..gitignore文件夹中，可以写入一些不需要上传到github中的文件名称。

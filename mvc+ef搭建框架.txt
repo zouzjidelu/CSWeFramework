@@ -1,0 +1,55 @@
+mvc和ef搭建框架1
+1.github官网上搜索core  按T，快速搜索内容，
+2.搭建框架步骤
+一：建立解决方案【比如是汽车管理系统】CarManager
+二：建立类库，核心通用公共组件，抽象 CarManager.Core 【所有任何类库都可以使用，他是公共的】
+三：数据访问层， CarManager.Data 【读取xml    ，json，数据库】 【以后可以切换，现在是ef，后面可能是orm，这里说的不是切换数据库，	    这里解耦的是orm框架】 
+四：建立服务【wcf，webapi】，业务相关  CarManager.Service
+五：web  【mvc】  CarManager.Web  身份认证不用勾选，后期使用自己的
+六：webapi        CarManager.Api
+七：web公共组件   CarManager.WebCore [支付。等等]
+
+八：Test项目【选择单元测试】后期可能会单元测试
+
+以上项目结构出来了
+
+首先：
+【在中国使用领域模型，不适合，需求一直不确定的。】，所以这个微框架使用的不是真正的ddd
+一：在CarManager.Core中
+   1.建立data文件夹，
+      a.建立仓储抽象，约束类，写一个通用方法，增删改查 IRepository<T> where T:class
+
+   2.建立Domain，【领域】文件夹
+      a.建立实体，标识实体BaseEntity，写入Id属性
+      b.汽车类，Car，继承BaseEntity，表名汽车实体，车有自己的属性。。比如名称，价格，生产日期         ，等等
+
+   3.建立Cache缓存文件夹，缓存类，分布式缓存 ，本内存缓存，memecache，redis，等等  
+      a.ICacheManager,缓存要抽象，为什么？因为缓存的地方不一样，所以要抽象，是一个接口 ICacheManager
+	  其中也是增删改查 【Get(获取)，Set(设置，一般存在就覆盖)，Contains(是否存在),Clear(清	          空)】
+      b.NullCacheManager，空缓存，替换内存缓存，redis	  如果用户不需要缓存，默认就注入进去即	可
+      c.MemoryCacheManager,内存缓存【微软新增的内存缓存，需要引用System.Runtime.Caching】，	  就需要实现ICacheManager接口，具体请看代码。方法有【Clear，Get,Set，Remove，Set】
+      d.RedisCacheManager,需要实现ICacheManager接口，通过命令的方式安装 Stackexchange.redis包，选择CarManager.Core
+          类库，然后输入命令安装 install Stackexchange.redis,然后需要配置一些东西，配置的东西多，比如ip等，写在构造函数中就有些麻          烦，这个时候就有了一个配置信息了，所以要简历一个配置文件夹Config
+
+   4.建立Config文件夹
+     a.ApplicationConfig.cs,
+       I:在微软webconfig中有很多配直节，并且读取配置节需要有对应的类，比如ef会在congfig中配置一些信息，那么redis也需要一些配置节         那么微软也提供了一个类【ConfigurationSection】，自定义自己的配直节，解析自己的配置节,比如在webconfig中
+	 <applicationConfig><redisCache enabled="true" connectionString="127.0.0.1" /></applicationConfig>
+	 
+	II: ApplicationConfig继承ConfigrationSection
+		
+     b.RedisCacheElement.cs[redis缓存元素]，继承微软的配置元素，ConfigurationElement
+       
+       I:是否禁用属性Enabled  
+       II:连接字符串属性ConnectionString
+          这两个属性是不是用户必须设置的？可以在属性上打一个标签，
+       III：redis锁
+   
+     c.PageConfig.cs,
+   4.安装unity容器。nugte上找到安装unity mvc 的命令  Instal-Package Unity.Mvc，安装在CarManager.Web项目下
+   5.在CarManager.core中创建Log文件夹，mvc推荐使用NLog 不是log4，命令方式安装  Install-Package NLog -Pre
+
+       
+   
+	
+
