@@ -29,7 +29,8 @@ mvc和ef搭建框架1
       b.NullCacheManager，空缓存，替换内存缓存，redis	  如果用户不需要缓存，默认就注入进去即	可
       c.MemoryCacheManager,内存缓存【微软新增的内存缓存，需要引用System.Runtime.Caching】，	  就需要实现ICacheManager接口，具体请看代码。方法有【Clear，Get,Set，Remove，Set】
       d.RedisCacheManager,需要实现ICacheManager接口，通过命令的方式安装 Stackexchange.redis包，选择CarManager.Core
-          类库，然后输入命令安装 install Stackexchange.redis,然后需要配置一些东西，配置的东西多，比如ip等，写在构造函数中就有些麻          烦，这个时候就有了一个配置信息了，所以要简历一个配置文件夹Config
+          类库，然后输入命令安装 install Stackexchange.redis,然后需要配置一些东西，配置的东西多，比如ip等，写在构造函数中就有些麻          烦，这个时候就有了一个配置信息了，所以要创建一个配置文件夹Config
+	理解volatile关键字 https://blog.csdn.net/sean4m/article/details/53287618，http://www.bdqn.cn/news/201410/15520.shtml
 
    4.建立Config文件夹
      a.ApplicationConfig.cs,
