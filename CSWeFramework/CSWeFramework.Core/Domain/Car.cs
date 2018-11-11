@@ -1,7 +1,7 @@
 ﻿using CSWeFramework.Core.Domain;
 using System;
 
-namespace CSWeFramework.Core.Cars
+namespace CSWeFramework.Core.Domain
 {
     /// <summary>
     /// 汽车实体类

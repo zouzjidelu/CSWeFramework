@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace CSWeFramework.Core.Data
 {
@@ -50,6 +51,8 @@ namespace CSWeFramework.Core.Data
         /// </summary>
         /// <param name="entitys"></param>
         void Delete(IEnumerable<T> entitys);
+
+        IQueryable<T> Table { get; }
 
     }
 }

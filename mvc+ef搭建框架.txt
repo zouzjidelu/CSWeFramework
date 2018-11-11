@@ -51,6 +51,48 @@ mvc和ef搭建框架1
    5.在CarManager.core中创建Log文件夹，mvc推荐使用NLog 不是log4，命令方式安装  Install-Package NLog -Pre
 	a.ILogger 接口
 	b.NullLogger
+Data类库
+
+数据库迁移需要设置web项目为启动项目
+然后进行数据库迁移，因为数据库连接字符串在web中
+数据库迁移
+Enable-Migrations
+数据库更新
+Update-Database -Force
+
+Server类库
+1.添加Car文件夹，进行业务分类
+2.添加接口服务ICarService
+3.添加实现服务CarService
+   使用仓储，于ef解耦。不依赖具体的orm框架，依赖抽象
+   不依赖具体的缓存管理，依赖抽象
+Web层
+1.引入Core，Service类库
+2.引入untiy.mvc容器
+3.实现Icarservice注入   
+
+每层都需要进行抽象，通过依赖注入的方式，
+ioc容器 
+Install-Package Unity.Mvc 到web
+
+
+
+
+
+在Core,data,service,web中安装Unity容器,所有的容器都依赖unity
+在core类库下创建容器注册接口，
+创建基础结构文件夹  Infrastucture
+1.IDependencyRegister接口
+   void RegisterTypes(IunityContainer container);
+2.注册服务容器【ServiceContainer】，包括仓储注册，业务层注册，基础设施曾注册 等等。。
+静态类，
+ 在data类库中进行仓储注册
+
+如果web更插件化，插拔式操作
+，只要把dll拷贝到web 的bin中
+如何识别出来，进行注册？如何做？
+需要在core类库中写一个类型查找器
+ITypeFinder--类型查找器
 
        
    
