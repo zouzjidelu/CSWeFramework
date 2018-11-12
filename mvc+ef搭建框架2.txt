@@ -1,0 +1,22 @@
+昨天在CSWeFramework.Core中完成了一些公用的组件，今天开始实现Data中的组件
+1.安装Ef组件 Install-package EntityFramework
+2.创建DbContext，继承自Ef框架中的DbContext，不继承Dbcontext，继承一个接口IDbContext。为了抽象出来，以后可以
+  不使用ef，则这里直接实现IDbContext内容即可。这是更高层次的抽象，以后用其他第三方的orm框架，直接实现该接口即可
+3.创建IDbContext接口
+4.创建CarDbContext，实现IDbContext，DbContext	
+  构造函数中，实现默认数据库迁移
+   Database.SetInitializer( new CreateDatabaseIfNotExists<CarDbcontext>());
+5.webconfig中 配置数据库连接 <add name="connstr" server=. uid=xx,password="" >
+ 
+6. 启动数据库迁移  Enable-Migrations 
+   自动生成conifig类，在构造函数中设置为自动迁移  AutomaticMigrationsEnabled=true;
+   
+7.设置实体类映射
+  CarMap:EntityTypeConfiguration<Car>
+  构造函数中配置
+  this.HasKey();
+8. ef仓储需要实现IRepository，
+   创建EfRepository<T>:IRepository<T> where t: class
+   实现方法需要用到efdbcontext，所以要引入IDbcontext，为什么不是具体dbcontext？因为这里，解耦了。以后切换底层实现，可以随意切换
+
+  
