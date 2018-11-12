@@ -9,6 +9,8 @@ namespace CSWeFramework.Core.Config
     public class ApplicationConfig : ConfigurationSection
     {
         private const string RedisCachePropertyName = "redisCache";
+
+        [ConfigurationPropertyAttribute(RedisCachePropertyName)]
         public RedisCacheElement RedisCacheConfig
         {
             get { return (RedisCacheElement)base[RedisCachePropertyName]; }

@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Web.Mvc;
 using Microsoft.Practices.Unity.Mvc;
-
+//在Aplication_Start启动之前执行此插件
 [assembly: WebActivatorEx.PreApplicationStartMethod(typeof(CSWeFramework.Web.App_Start.UnityWebActivator), "Start")]
 [assembly: WebActivatorEx.ApplicationShutdownMethod(typeof(CSWeFramework.Web.App_Start.UnityWebActivator), "Shutdown")]
 

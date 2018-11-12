@@ -1,4 +1,7 @@
 昨天在CSWeFramework.Core中完成了一些公用的组件，今天开始实现Data中的组件
+
+Data类库
+
 1.安装Ef组件 Install-package EntityFramework
 2.创建DbContext，继承自Ef框架中的DbContext，不继承Dbcontext，继承一个接口IDbContext。为了抽象出来，以后可以
   不使用ef，则这里直接实现IDbContext内容即可。这是更高层次的抽象，以后用其他第三方的orm框架，直接实现该接口即可
@@ -9,8 +12,8 @@
 5.webconfig中 配置数据库连接 <add name="connstr" server=. uid=xx,password="" >
  
 6. 启动数据库迁移  Enable-Migrations 
-   自动生成conifig类，在构造函数中设置为自动迁移  AutomaticMigrationsEnabled=true;
-   
+   自动生成conifig类，在构造函数中设置为自动迁移  AutomaticMigrationsEnabled=true;  
+
 7.设置实体类映射
   CarMap:EntityTypeConfiguration<Car>
   构造函数中配置
@@ -18,5 +21,73 @@
 8. ef仓储需要实现IRepository，
    创建EfRepository<T>:IRepository<T> where t: class
    实现方法需要用到efdbcontext，所以要引入IDbcontext，为什么不是具体dbcontext？因为这里，解耦了。以后切换底层实现，可以随意切换
+
+
+数据库迁移需要设置web项目为启动项目
+然后进行数据库迁移，因为数据库连接字符串在web中
+数据库迁移
+Enable-Migrations
+数据库更新
+Update-Database -Force
+
+Server类库
+1.添加Car文件夹，进行业务分类
+2.添加接口服务ICarService
+3.添加实现服务CarService
+   使用仓储，于ef解耦。不依赖具体的orm框架，依赖抽象
+   不依赖具体的缓存管理，依赖抽象
+Web层
+1.引入Core，Service类库
+2.引入untiy.mvc容器
+3.实现Icarservice注入   
+
+每层都需要进行抽象，通过依赖注入的方式，
+ioc容器 
+Install-Package Unity.Mvc 到web
+
+
+在Core,data,service,web中安装Unity容器,所有的容器都依赖unity
+在core类库下创建容器注册接口，
+创建基础结构文件夹  Infrastucture
+1.IDependencyRegister接口
+   void RegisterTypes(IunityContainer container);
+2.注册服务容器【ServiceContainer】，包括仓储注册，业务层注册，基础设施曾注册 等等。。
+静态类，
+ 在data类库中进行仓储注册
+
+如果web更插件化，插拔式操作
+，只要把dll拷贝到web 的bin中
+如何识别出来，进行注册？如何做？
+需要在core类库中写一个类型查找器
+ITypeFinder--类型查找器接口
+AppDomainTypeFinder--应用程序域类型查找器
+在web.Core中，写一个web类型查找器（WebTypeFinder），继承AppDomainTypeFinder
+1.创建字段，是否已经装载程序集
+
+2.获取bin目录的文件夹
+  判断是否是iis部署的。如果是找bin目录
+  不是，就招程序域下的文件夹
+
+3.GetAssemblies()//获取程序集
+  判断是否已经装载，如果没有，就装载，并设置字段为true，只装载一次
+         
+4.  在unityconfig中，将默认的unity容器注册删除，使用自己写的ServiceContainer
+通过类型查找器，找到容器注册接口IDependencyRegister，然后找到实现该接口的类型
+进行实例化。注入容器中
+，并将redis在webconfig中配置的文件读取出来，注册实例到容器中，
+
+5.开始调试代码
+
+6.整个框架流程
+（1）：创建Core类库、Data类库，Service类库，Web站点，webCore类库，测试类库，
+	a.Core:核心类库，所有地方都可以使用此组件，此组件中有仓储中心，缓存，日志，ioc容器组件，等等
+	b.Data：数据访问类库。可扩展，替换，Ef、Dapper，等等。，此组建中实现IDbContext，热插拔，使用不同的数据库访问组件
+	c.Service:业务层，依赖于Data层，通过ioc容器依赖注入。专注业务，ioc注册
+	d.WebCore：基础设施层：web类型查找器，查找应用程序域中的dll
+	e.Web：mvc。
+	f.UnitTest：测试方法
+（2）：将unity容器引入，在core类库中写入容器注册接口，实现该接口的实例，最终都会被类型查找器查找出来，注入到容器中，
+
+（3）：数据库迁移初始化数据在Data类库下的Configration中初始化
 
   

@@ -1,4 +1,8 @@
 using System;
+using System.Configuration;
+using CSWeFramework.Core.Config;
+using CSWeFramework.Core.Infrastucture;
+using CSWeFramework.Web.Core.Infrastucture;
 using Microsoft.Practices.Unity;
 using Microsoft.Practices.Unity.Configuration;
 
@@ -10,19 +14,20 @@ namespace CSWeFramework.Web.App_Start
     public class UnityConfig
     {
         #region Unity Container
-        private static Lazy<IUnityContainer> container = new Lazy<IUnityContainer>(() =>
-        {
-            var container = new UnityContainer();
-            RegisterTypes(container);
-            return container;
-        });
+        //private static Lazy<IUnityContainer> container = new Lazy<IUnityContainer>(() =>
+        //{
+        //    var container = new UnityContainer();
+        //    RegisterTypes(container);
+        //    return container;
+        //});
 
         /// <summary>
         /// Gets the configured Unity container.
         /// </summary>
         public static IUnityContainer GetConfiguredContainer()
         {
-            return container.Value;
+            RegisterTypes(ServiceContainer.Current);
+            return ServiceContainer.Current;
         }
         #endregion
 
@@ -37,6 +42,27 @@ namespace CSWeFramework.Web.App_Start
 
             // TODO: Register your types here
             // container.RegisterType<IProductRepository, ProductRepository>();
+            
+            //注册unity容器
+            //IUnityContainer->UnityContainer
+            container.RegisterInstance(container);
+            //通过查找器，查找bin中实现了IDependencyRegister接口的类型
+            ITypeFinder typeFinder = new WebTypeFinder();
+            //获取配置节信息
+            var config=ConfigurationManager.GetSection("applicationConfig") as ApplicationConfig;
+            //注册实例
+            container.RegisterInstance(config);
+            
+            var registerTypes = typeFinder.FindClassesOfType<IDependencyRegister>();
+            //遍历实现了IDependencyRegister接口类型
+            foreach (var registerType in registerTypes)
+            {
+                //创建这个对象
+               var register= (IDependencyRegister)Activator.CreateInstance(registerType);
+                register.RegisterType(container);
+
+            }
+
         }
     }
 }

@@ -145,9 +145,17 @@
       <Project>{12dc3cbc-45b6-4e2f-bf04-496e3335a9da}</Project>
       <Name>CSWeFramework.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CSWeFramework.Data\CSWeFramework.Data.csproj">
+      <Project>{c9dc5969-e5d4-41a9-8f20-3ac97808c29d}</Project>
+      <Name>CSWeFramework.Data</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CSWeFramework.Service\CSWeFramework.Service.csproj">
       <Project>{0fbe39d6-1868-431c-9dfd-9de443947a27}</Project>
       <Name>CSWeFramework.Service</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CSWeFramework.Web.Core\CSWeFramework.Web.Core.csproj">
+      <Project>{7e8b9e21-7f22-41af-9397-a2f4ee25e25a}</Project>
+      <Name>CSWeFramework.Web.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

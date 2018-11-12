@@ -43,7 +43,7 @@ namespace CSWeFramework.Core.Infrastucture
                 foreach (var type in assembly.GetTypes())
                 {
                     //指定类型的实例可以分配给当前的实例||(当前Type可以用来构造其他泛型类型的泛型类型&&类型实现通用)
-                    if (type.IsAssignableFrom(assignTypeFrom) || (assignTypeFrom.IsGenericTypeDefinition && IsAssignableGeneric(type, assignTypeFrom)))
+                    if (assignTypeFrom.IsAssignableFrom(type) || (assignTypeFrom.IsGenericTypeDefinition && IsAssignableGeneric(type, assignTypeFrom)))
                     {
                         //如果当前类型不是一个接口
                         if (!type.IsInterface)
@@ -61,7 +61,6 @@ namespace CSWeFramework.Core.Infrastucture
                             }
                         }
                     }
-
                 }
             }
 
@@ -71,7 +70,8 @@ namespace CSWeFramework.Core.Infrastucture
 
         public IEnumerable<Type> FindClassesOfType<T>(bool onlyConcreteClasses = true)
         {
-            return this.FindClassesOfType(typeof(T), onlyConcreteClasses);
+            var types = this.FindClassesOfType(typeof(T), onlyConcreteClasses);
+            return types;
         }
 
         public IEnumerable<Type> FindClassesOfType<T>(IEnumerable<Assembly> assemblies, bool onlyConcreteClasses = true)
@@ -85,7 +85,8 @@ namespace CSWeFramework.Core.Infrastucture
         /// <returns>一个应由NOP工厂加载的程序集列表</returns>
         public virtual IList<Assembly> GetAssemblies()
         {
-            return this.GetCurrentDomainAssemblies();
+            var assemblys = this.GetCurrentDomainAssemblies();
+            return assemblys;
         }
 
         public IList<Assembly> GetCurrentDomainAssemblies()
