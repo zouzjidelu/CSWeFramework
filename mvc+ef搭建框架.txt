@@ -92,8 +92,18 @@ Install-Package Unity.Mvc 到web
 ，只要把dll拷贝到web 的bin中
 如何识别出来，进行注册？如何做？
 需要在core类库中写一个类型查找器
-ITypeFinder--类型查找器
+ITypeFinder--类型查找器接口
+AppDomainTypeFinder--应用程序域类型查找器
+在web.Core中，写一个web类型查找器（WebTypeFinder），继承AppDomainTypeFinder
+1.创建字段，是否已经装载程序集
 
+2.获取bin目录的文件夹
+  判断是否是iis部署的。如果是找bin目录
+  不是，就招程序域下的文件夹
+
+3.GetAssemblies()//获取程序集
+  判断是否已经装载，如果没有，就装载，并设置字段为true，只装载一次
+  
        
    
 	
