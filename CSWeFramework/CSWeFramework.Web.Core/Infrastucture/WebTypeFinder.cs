@@ -24,13 +24,12 @@ namespace CSWeFramework.Web.Core.Infrastucture
         /// <returns>例如：C:\InPub\www.根目录</returns>
         public virtual string GetBinDirectroy()
         {
-            //是否托管于iis，是，则获取iis的bin目录的物理路径
+            //当前应用程序域是否在由 ApplicationManager 对象承载,是，则获取iis的bin目录的物理路径
             if (System.Web.Hosting.HostingEnvironment.IsHosted)
             {
                 return System.Web.HttpRuntime.BinDirectory;
             }
 
-            //不托管的。例如，在单元测试中运行
             return AppDomain.CurrentDomain.BaseDirectory;
         }
 
