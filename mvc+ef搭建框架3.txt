@@ -1,0 +1,95 @@
+一.使用T4模板
+界面不好看，微软在mvc 中集成了bootstarp。
+  views-->Shard-->_ViewStart.cshtml
+  如果使用了此模板，就会用上bootstartp的样式
+  这些都是用T4模板生成，默认情况下微软使用的模板
+  在 c:ProgramFile(x86)/Microsoft Visual Studio 14.0/Common7/IDE/Extensions/Microsoft/Web/Mvc/Scaffolding/Templates下的MVCView文件
+ copy到项目中，文件夹名称必须是固定的，创建文件夹-CodeTemplates
+  然后粘贴到此文件夹下。为了更简化。把.vb的模板删掉，咱们使用的是C#的模板
+
+1.在控制的action中右键--添加视图，选择模板，选择List【还有其他的，这里做例子】
+  选择模型类，选择数据上下文类，，使用布局页，如果不选，默认找views文件夹的_ViewStart页面模板
+2.改T4模板--->List.cs.t4，将按钮样式更改为bootstarp样式的按钮。。
+  推荐一个T4编辑器，devart T4 ,
+  a.百度下载 devart t4 editor vs2017,安装，再编辑t4模板，会有颜色分类，便于修改t4模板
+  编辑：
+  b.  @Html.ActionLink("Create New","Create",null,new{@class="btn btn-default"});//null 是否有属性值,匿名对象  。写入样式
+  c.删除视图，重新添加视图，选择布局页。运行起来的效果就是有样式的按钮。也可以将分页卸载模板中，等等
+
+二.将mvc--控制器中的的action返回的json类型替换为自己写的，因为微软自带的json框架性能不高。
+a.写入一个basecontroller。这个basectorller是一个公用的东西，所以在其他地方也可能用到。故写在web.core类库下
+b.创建mvc文件夹。创建basecontroller类。因为需要继承mvc中的Controller，所以要引用mvc的dll。nuget上安装太慢，直接在安装vs目录中
+  找到该dll，引入即可。
+c. 重写【覆盖】 JsonResult方法
+d.自定义JsonNetResult类，继承mvc的JsonResult
+d. 覆写执行的方法 ExcuteResult
+   1.判断参数是否为空，为空，则抛出异常
+   2.var response=context.HttpContext.Response;
+   3.判断数据类型、response.ContentType=string.IsNullOrEmpty(ContentType)?xxxx
+   4.判断编码、ContentEncoding
+   5.安装Newtonsoft.Json
+   6.将数据装入json中，写入到response中
+
+三、在Controller中继承BaseController，用t4模板生成。并应用web.core类库
+
+四、新增car操作
+1.验证。Model.Status
+2.在实体类中打上验证标签，比如最大长度。不能为空，等等
+3.在页面引入验证js库
+
+五、启动客户端验证【客户端验证完，再到后台去】
+1.在App_Start文件夹下的BundleConfig(会自动压缩)配置前端文件类中，引入
+jquery库、jquery验证库【jquery.validate.js】、jquery.validate.Unobtrusive
+
+六、Dto的概念
+1.数据库五个 字段，但是页面只需要两个字段，如果都传入进去，就有点不好了。
+2.在web下models文件夹下创建car文件夹，然后创建CarViewModel类，将页面需要展示的数据写入进去，
+在这个层可以随意打标签
+3.将数据库查询的实体，与dto实体进行赋值，到前端展示,dto中要些主键id，否则报错
+4.页面没提示，可以在view文件夹下的webconfig中添加当前dto的命名空间就可以有智能提示了
+
+七、第三方验证框架
+1.nuget上找fluentvalidation包，然后安装项目所对应的mvc版本就可以，mvc版本如何查看？在引用中找到system.web.mvc.dll属性查看即可
+  知道，比如是mvc5版本，就下载 Install-Package FluentValidation.MVC5
+2.验证的都是在web下的。创建文件夹Validator
+   a.创建CarValidator验证器类，
+   b.继承第三方验证框架中的验证类AbstractValidator<CarViewMode(验证的模型，dto)>
+   c.在构造函数中写入验证规则。
+   d.在dto上加上此验证器[FluentValidation.Attributes.Validation(typeof(CarValidator))]
+   e.提示是英文的，下一个这个插件的中文插件包
+
+3.需要将第三方验证框架，替换掉微软自带的mvc验证框架。
+
+4.在App_Start文件夹下创建ExensionsActivator【扩展激活器】类
+  在appstar还没执行，执行此激活器，这个方法必须限制性，比gloab中的aplication_Star还要先执行
+  a. public static void Start()
+     {
+       //将微软验证器删除（属性设置false即可）
+      //加上自己的验证器[将第三方验证框架引入进来]
+        ModelValidatorProviders.Providers.Add(new FluentValidationModelValidatorProvider());
+      //引入unity验证工厂（5.a）
+     }
+
+5.  可以不在dto类上打验证标签也可以实现验证  
+a.在Validator文件夹下ia创建一个验证器工厂  UntiyValidatorFactory
+   public  class UntiyValidatorFactory:ValidatorFactoryBase
+{
+ 1.在构造函数中，将unit容器注入进来
+  2.重写CreateInstance方法
+    
+}
+b.在Validator文件夹下创建验证注册器，实现IDependencyRegister
+   1.通过反射的方式，找到程序集类型下的接口只要有一个是泛型的并且是泛型类型的定义，是IValidator
+   就查出来所有的类型。
+  
+   2.循环验证器类型，依次 注入到untiy容器中
+  3.在4.a中Start方法中使用
+   
+    
+    
+
+ 
+
+
+
+  
