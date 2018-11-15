@@ -1,0 +1,32 @@
+一.使用T4模板
+界面不好看，微软在mvc 中集成了bootstarp。
+  views-->Shard-->_ViewStart.cshtml
+  如果使用了此模板，就会用上bootstartp的样式
+  这些都是用T4模板生成，默认情况下微软使用的模板
+  在 c:ProgramFile(x86)/Microsoft Visual Studio 14.0/Common7/IDE/Extensions/Microsoft/Web/Mvc/Scaffolding/Templates下的MVCView文件
+ copy到项目中，文件夹名称必须是固定的，创建文件夹-CodeTemplates
+  然后粘贴到此文件夹下。为了更简化。把.vb的模板删掉，咱们使用的是C#的模板
+
+1.在控制的action中右键--添加视图，选择模板，选择List【还有其他的，这里做例子】
+  选择模型类，选择数据上下文类，，使用布局页，如果不选，默认找views文件夹的_ViewStart页面模板
+2.改T4模板--->List.cs.t4，将按钮样式更改为bootstarp样式的按钮。。
+  推荐一个T4编辑器，devart T4 ,
+  a.百度下载 devart t4 editor vs2017,安装，再编辑t4模板，会有颜色分类，便于修改t4模板
+  编辑：
+  b.  @Html.ActionLink("Create New","Create",null,new{@class="btn btn-default"});//null 是否有属性值,匿名对象  。写入样式
+  c.删除视图，重新添加视图，选择布局页。运行起来的效果就是有样式的按钮。也可以将分页卸载模板中，等等
+
+二.将mvc--控制器中的的action返回的json类型替换为自己写的，因为微软自带的json框架性能不高。
+a.写入一个basecontroller。这个basectorller是一个公用的东西，所以在其他地方也可能用到。故写在web.core类库下
+b.创建mvc文件夹。创建basecontroller类。因为需要继承mvc中的Controller，所以要引用mvc的dll。nuget上安装太慢，直接在安装vs目录中
+  找到该dll，引入即可。
+c. 重写【覆盖】 JsonResult方法
+d.自定义JsonNetResult类，继承mvc的JsonResult
+d. 覆写执行的方法 ExcuteResult
+   1.判断参数是否为空，为空，则抛出异常
+   2.var response=context.HttpContext.Response;
+   3.判断数据类型、response.ContentType=string.IsNullOrEmpty(ContentType)?xxxx
+   4.判断编码、ContentEncoding
+   5.安装Newtonsoft.Json
+   6
+  
