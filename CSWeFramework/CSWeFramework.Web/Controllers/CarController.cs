@@ -1,23 +1,13 @@
 ﻿using CSWeFramework.Core.Domain;
 using CSWeFramework.Service.Cars;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace CSWeFramework.Web.Controllers
 {
-    /// <summary>
-    /// car 控制器
-    /// </summary>
     public class CarController : Controller
     {
-        public readonly ICarService carService;
-        /// <summary>
-        /// 注入carservice
-        /// </summary>
-        /// <param name="carService"></param>
+        private readonly ICarService carService;
         public CarController(ICarService carService)
         {
             this.carService = carService;
@@ -28,6 +18,18 @@ namespace CSWeFramework.Web.Controllers
         {
             List<Car> cars = carService.GetCars();
             return View(cars);
+        }
+
+        [HttpGet]
+        public ActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult Create(Car car)
+        {
+            return RedirectToAction("Index");
         }
     }
 }

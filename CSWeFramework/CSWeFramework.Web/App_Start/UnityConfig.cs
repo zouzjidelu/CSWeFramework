@@ -42,8 +42,7 @@ namespace CSWeFramework.Web.App_Start
 
             // TODO: Register your types here
             // container.RegisterType<IProductRepository, ProductRepository>();
-            
-            //注册unity容器
+           //注册unity容器
             //IUnityContainer->UnityContainer
             container.RegisterInstance(container);
             //通过查找器，查找bin中实现了IDependencyRegister接口的类型
@@ -60,9 +59,7 @@ namespace CSWeFramework.Web.App_Start
                 //创建这个对象
                var register= (IDependencyRegister)Activator.CreateInstance(registerType);
                 register.RegisterType(container);
-
             }
-
         }
     }
 }

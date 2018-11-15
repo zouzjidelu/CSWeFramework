@@ -40,5 +40,7 @@ namespace CSWeFramework.Data
             modelBuilder.Configurations.AddFromAssembly(Assembly.GetExecutingAssembly());
             base.OnModelCreating(modelBuilder);
         }
+
+        public System.Data.Entity.DbSet<CSWeFramework.Core.Domain.Car> Cars { get; set; }
     }
 }

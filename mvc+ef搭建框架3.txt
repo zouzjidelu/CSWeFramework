@@ -11,7 +11,8 @@
   选择模型类，选择数据上下文类，，使用布局页，如果不选，默认找views文件夹的_ViewStart页面模板
 2.改T4模板--->List.cs.t4，将按钮样式更改为bootstarp样式的按钮。。
   推荐一个T4编辑器，devart T4 ,
-  a.百度下载 devart t4 editor vs2017,安装，再编辑t4模板，会有颜色分类，便于修改t4模板
+  a.百度下载 devart t4 editor vs2017,安装，再编辑t4模板，会有颜色分类，便于修改t4模板  https://www.devart.com/t4-editor/download.html
+ 
   编辑：
   b.  @Html.ActionLink("Create New","Create",null,new{@class="btn btn-default"});//null 是否有属性值,匿名对象  。写入样式
   c.删除视图，重新添加视图，选择布局页。运行起来的效果就是有样式的按钮。也可以将分页卸载模板中，等等
