@@ -15,7 +15,7 @@
  
   编辑：
   b.  @Html.ActionLink("Create New","Create",null,new{@class="btn btn-default"});//null 是否有属性值,匿名对象  。写入样式
-  c.删除视图，重新添加视图，选择布局页。运行起来的效果就是有样式的按钮。也可以将分页卸载模板中，等等
+  c.删除视图，重新添加视图，选择布局页。运行起来的效果就是有样式的按钮。也可以将分页写在模板中，等等
 
 二.将mvc--控制器中的的action返回的json类型替换为自己写的，因为微软自带的json框架性能不高。
 a.写入一个basecontroller。这个basectorller是一个公用的东西，所以在其他地方也可能用到。故写在web.core类库下
