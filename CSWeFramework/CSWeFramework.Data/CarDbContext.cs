@@ -42,5 +42,6 @@ namespace CSWeFramework.Data
         }
 
         public System.Data.Entity.DbSet<CSWeFramework.Core.Domain.Car> Cars { get; set; }
+        
     }
 }

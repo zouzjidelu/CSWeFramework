@@ -25,6 +25,13 @@ namespace CSWeFramework.Web
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
                       "~/Content/site.css"));
+
+
+             bundles.Add(new ScriptBundle("~/bundles/Jquery-Validate").Include(
+                      "~/Scripts/jquery.validate.js"));
+             bundles.Add(new ScriptBundle("~/bundles/Jquery-Validate-Unobtrusive").Include(
+                      "~/Scripts/jquery.validate.unobtrusive.js"));
+
         }
     }
 }

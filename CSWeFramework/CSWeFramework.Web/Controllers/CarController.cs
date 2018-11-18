@@ -1,5 +1,6 @@
 ﻿using CSWeFramework.Core.Domain;
 using CSWeFramework.Service.Cars;
+using CSWeFramework.Web.Models.Car;
 using System.Collections.Generic;
 using System.Web.Mvc;
 
@@ -27,8 +28,14 @@ namespace CSWeFramework.Web.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create(Car car)
+        public ActionResult Create(CarViewModel car)
         {
+            if (!ModelState.IsValid)
+            {
+                var keys=ModelState.Keys;
+                var values=ModelState.Values;
+            }
+
             return RedirectToAction("Index");
         }
     }

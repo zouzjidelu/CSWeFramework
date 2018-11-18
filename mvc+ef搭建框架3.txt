@@ -41,7 +41,11 @@ d. 覆写执行的方法 ExcuteResult
 五、启动客户端验证【客户端验证完，再到后台去】
 1.在App_Start文件夹下的BundleConfig(会自动压缩)配置前端文件类中，引入
 jquery库、jquery验证库【jquery.validate.js】、jquery.validate.Unobtrusive
-
+ScriptBundle("~/Scripts/Jquery");//虚拟路径
+.Include("~/Scripts/jquery-{version}.js");//这里引入js如果不是压缩的，在打包的过程中，会自动
+打包成压缩的，比如引入的jqueyr.js，那么打包的时候会是jquery.min.js
+也可以将多个js打包到一个虚拟路径下。继续.include即可
+2.在页面引入script虚拟路径即可
 六、Dto的概念
 1.数据库五个 字段，但是页面只需要两个字段，如果都传入进去，就有点不好了。
 2.在web下models文件夹下创建car文件夹，然后创建CarViewModel类，将页面需要展示的数据写入进去，
@@ -52,42 +56,70 @@ jquery库、jquery验证库【jquery.validate.js】、jquery.validate.Unobtrusive
 七、第三方验证框架
 1.nuget上找fluentvalidation包，然后安装项目所对应的mvc版本就可以，mvc版本如何查看？在引用中找到system.web.mvc.dll属性查看即可
   知道，比如是mvc5版本，就下载 Install-Package FluentValidation.MVC5
+ 学习地址：https://www.cnblogs.com/libingql/p/3801704.html
+
 2.验证的都是在web下的。创建文件夹Validator
    a.创建CarValidator验证器类，
    b.继承第三方验证框架中的验证类AbstractValidator<CarViewMode(验证的模型，dto)>
    c.在构造函数中写入验证规则。
-   d.在dto上加上此验证器[FluentValidation.Attributes.Validation(typeof(CarValidator))]
-   e.提示是英文的，下一个这个插件的中文插件包
+            //定义指定属性的验证规则
+            RuleFor(car => car.Name).NotNull().Length(5, 10);
+            RuleFor(car => car.Price).NotNull();	
+   d.在dto上加上此验证器[Validator(typeof(CarValidator))]
+     注意：需要将实体类属性中使用的mvc自带的验证标签需要删除，否则会有冲突,如Maxlength
+   e.在页面中提示信息是英文的，下一个这个插件的中文插件包
+
+
 
 3.需要将第三方验证框架，替换掉微软自带的mvc验证框架。
+   a.在App_Start中创建一个ExensionsActivator激活器，并在appstart在启动之前执行，和之前的unity激活器一样，都是在appstart执行之前执行此操作
+   b.创建一个静态的无返回值的Start方法，将mvc默认的验证类型移除
 
 4.在App_Start文件夹下创建ExensionsActivator【扩展激活器】类
   在appstar还没执行，执行此激活器，这个方法必须限制性，比gloab中的aplication_Star还要先执行
   a. public static void Start()
      {
        //将微软验证器删除（属性设置false即可）
+      //引入unity验证工厂（5.a） 
+          //将5.a验证工厂，注入到第三方验证框架中
       //加上自己的验证器[将第三方验证框架引入进来]
         ModelValidatorProviders.Providers.Add(new FluentValidationModelValidatorProvider());
-      //引入unity验证工厂（5.a）
+
      }
 
 5.  可以不在dto类上打验证标签也可以实现验证  
-a.在Validator文件夹下ia创建一个验证器工厂  UntiyValidatorFactory
+a.在Validator文件夹下创建一个验证器工厂  UntiyValidatorFactory，此工厂作用就是解析指定名称的的对象，解析的对象是实现了IValidator接口的类
    public  class UntiyValidatorFactory:ValidatorFactoryBase
 {
  1.在构造函数中，将unit容器注入进来
   2.重写CreateInstance方法
-    
+   3.最终将此工厂注入到替换mvc自带验证器时需要注入的工厂（4.aStart方法中）
 }
-b.在Validator文件夹下创建验证注册器，实现IDependencyRegister
-   1.通过反射的方式，找到程序集类型下的接口只要有一个是泛型的并且是泛型类型的定义，是IValidator
-   就查出来所有的类型。
-  
-   2.循环验证器类型，依次 注入到untiy容器中
-  3.在4.a中Start方法中使用
+b.在Validator文件夹下创建 验证器注册类（ValidatorRegister），实现IDependencyRegister
+   1.通过反射的方式，找到程序集类型下的接口只要有一个是泛型的
+     并且是泛型类型的定义，是IValidator,就查出来所有的类型。
+    var validatorTypes = this.GetType().Assembly.GetTypes().Where(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IValidator<>)));
+    //注解：在验证类CarValidator : AbstractValidator<CarViewModel>  继承的  AbstractValidator是实现了IValidator接口的，所以这里会找到CarValidator
+ 2.循环验证器类型，依次 注入到untiy容器中
+  3.在4.a中Start方法中（程序启动的时候）注入进去
    
+
+总结：此节搭建框架所实现的功能，知识点
+1.t4模板的引入，
+2.将系统中的返回json，换成自己封装的jsonnetresult，这里需要非常对第三方newtonsoftjson框架非常熟悉，
+3.dto扁平化的设计实践、
+4.实体验证，为了将实体类中的验证分离开来，引入了第三方验证框架
+5.对此框架需要熟悉。将mvc自带的验证框架替换成第三方的
+6.替换过程中思路，
+  a.首先需要创建一个car的验证器，继承第三方验证框架(FluentValidation)的抽象类，
+  b.在需要验证的实体类carviewmodel上打上car的验证器类，
+  c.这样还是有一个弊端，就是在carviewmodel上依然打了验证其类，没有和实体类分开
+  d.需要创建一个unity验证器工厂，将实现了IValidator接口的验证类进行解析。在渲染页面的时候会去在此工厂中依次找到对应验证器实体类中的配置的属性上的验证规则
+  e.创建一个验证器注册器，实现IDependencyRegister，将所有的实现了IValidator接口的类找到，依次注入到容器中
+  f.将unity验证器工厂类，注入到引入第三方验证框架(FluentValidation)时需要的参数中，该参数需要一个工厂，就是此工厂
+目的就是在于验证规则和实体类进行拆分，互补干扰，在程序启动后会注入这个此验证框架，通过反射的方式，找到验证实体类，页面提交的时候会找到相应的验证类进行验证
     
-    
+
 
  
 

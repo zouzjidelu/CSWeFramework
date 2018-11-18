@@ -9,6 +9,10 @@ namespace CSWeFramework.Web.Core.Mvc
     {
         public JsonSerializerSettings JsonSerializerSettings { get; set; }
 
+        /// <summary>
+        ///对操作方法结果的处理
+        /// </summary>
+        /// <param name="context">执行结果时所处的上下文。</param>
         public override void ExecuteResult(ControllerContext context)
         {
             if (context == null)
