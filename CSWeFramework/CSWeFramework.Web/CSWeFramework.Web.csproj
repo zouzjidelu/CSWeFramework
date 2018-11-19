@@ -196,6 +196,11 @@
     </Compile>
     <Compile Include="Models\Car\CarViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Validator\CarValidator.cs" />
     <Compile Include="Validator\UntiyValidatorFactory.cs" />
     <Compile Include="Validator\ValidatorRegister.cs" />
@@ -283,6 +288,12 @@
       <Project>{7e8b9e21-7f22-41af-9397-a2f4ee25e25a}</Project>
       <Name>CSWeFramework.Web.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

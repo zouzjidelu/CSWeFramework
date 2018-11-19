@@ -1,0 +1,82 @@
+一、上节讲了第三方验证框架的引入，及实体与验证逻辑分开。验证提示可自定义，在验证类中加上WithMessage就可以写入自己的提示信息
+问题：
+    如果很多地方都需要写。岂不是很累赘？
+    可以把提示信息封装替换 
+操作步骤：
+1.在web项目中。右键属性--资源-写入翻译后的键值信息，并设置访问修饰符为public，否则无效果
+2.将验证资源模板引入到框架中。在ValidatorRegister验证注册器类中设置
+   FluentValidationModelValidatorProvider.Configure();
+   ValidatorOptions.ResourceProviderType=typeof(Resources);
+3.carviewmodel实体类加邮箱属性，。并在验证类中加上验证邮箱合法性，可以给提示信息【WithMessage】，如果加了提示信息
+  会优先使用这里的提示信息，没加，就会去找验证资源模板。故：在验证资源模板中加上邮箱的验证提示
+4.CarViewModel类。属性中是否可以不打标签【DisplayName】。因为这里打上标签，以后做一个英文系统。会很麻烦
+5.mvc的规则。会默认找displayname，所以要告诉mvc不从这里找。从资源中找。
+故，要替换mvc的规则。
+
+6.在web下创建一个mvc扩展文件夹，自定义一个元数据提供者类。继承微软的元数据提供者，重写元数据创建方法
+  思路：
+  1.首先把微软自己生成元数据保存起来
+  2.判断元数据类型是否为空
+  3.获取元数据名称key【命名空间+属性名+元数据的displayname（就是属性上打的标签）】
+  4.在验证资源管理中根据这个key找到displayname
+  5.判断是否为空，不为空，替换微软元数据的displayname
+7.在(ExensionActivator)验证扩展激活器中，把当前的元数据提供者替换成自定义的元数据提供者。
+8.在验证资源中。将车名、价格，邮箱设置一下中文。就可以在页面中看到效果
+  以后实现其他语言的系统，翻译一套模板即可
+  将资源copy一份改名为Resources-us.resx
+  然后将配置信息改成英文的
+
+9.在路由中的url可以配置一个语言的标致。根据zh-cn、 en-us 来识别不同的资源
+  url:"{lg}/{Controller/{action}}" 当请求过来判断lg，是什么语言文化版本
+  这里需要扩展一个mvc过滤器。LanuageActionFilter,并实现IActionFilter过滤器接口
+  实现OnActionExecuting()方法；
+  1.找到路由中的lg； string lg= filterContext.RouteData.Values["lg"].tostring();
+  2.修改当前线程语言文化 
+    Thread.CurrentThread.CurrentUICulture=new CultureInfo(lg);
+    Thread.CurrentThread.CurrentCulture=new CultureInfo(lg);
+  3.当mvc启动的时候有一个filterconfig配置，将这个过滤器加入即可
+  4.运行项目，通过更改lg来查看中英文切换
+
+10.目前表单验证提示信息的属性和和元数据配置的不一样。应该和元数据名称一致。
+   1.在验证器注册类中。
+   2.生成key【type.name+memberinfo.name+"displayName"】
+   3.通过key找到displayname。然后返回
+   4.打开页面。提交表单验证信息提示应该和名字一样。无论中英文切换都会改变
+
+总结：
+
+
+二、数据实体自动映射。两个实体之间相互转换
+1.在web项目中，安装包 Install-Package AutoMapper
+2.既然用到容器需要与automapper进行解耦，将mapper注入到容器中
+3.在web项目下的mvc扩展文件夹下，创建一个AutoMapperProfile，继承Profile【这里考虑分类，比如订单(OrderMapperProfile)，用户(UserMapperProfile)，产品，名字可以叫做不同的mapper】
+  a.重写Configure方法
+  b.创建map 
+    this.CareMap<Car,CarViewModel>();
+    this.CareMap<CarViewModel,car>();
+  c.将mapper注入到容器中
+4.创建AutoMapperREgister注册器类：实现IDependencyRegister
+  a.程序第一次启动时，通过反射找到这个类型下的程序集的所有类型。条件是找到所有继承了Profile的类
+  b.将符合条件的类型找到，通过反射的方式通过类型，创建对象，得到一个实例
+  c.mapper总配置。将创建的实例循环添加到配置中
+  d.向容器注册、
+    1.将映射配置注册到容器中
+    2.通过总配置创建一个Imapper，Impaer是一个单例的形式
+5.在控制器构造函数中注入映射配置
+  1.IMapper  mapper;;
+  2.ImapperConfig mapperConfig;
+  
+  然后可以在aciton方法中通过 mapper.Map<CarViewModel,Car>(model);//第二个参数可以自己配置，名字不一样可以动态指定
+  
+  
+  
+
+
+
+
+
+
+  
+
+
+
