@@ -67,6 +67,17 @@
   2.ImapperConfig mapperConfig;
   
   然后可以在aciton方法中通过 mapper.Map<CarViewModel,Car>(model);//第二个参数可以自己配置，名字不一样可以动态指定
+  Index 、Create
+
+三、权限
+实体权限 Core类库Domain文件夹下的BaseEntity公共的id
+菜单权限 
+Action权限
+
+创建、编辑权限
+a用户有创建权限 
+b用户有编辑权限
+ab用户都是通过json的方式进行创建、编辑
   
   
   
