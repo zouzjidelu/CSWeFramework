@@ -12,9 +12,9 @@ namespace CSWeFramework.Web.Validator
         public CarValidator()
         {
             //定义指定属性的验证规则
-            RuleFor(car => car.Name).NotNull().WithMessage("汽车名称不能为空").Length(5, 10).WithMessage("长度范围为5-10字节");
-
+            RuleFor(car => car.Name).NotNull().Length(5, 10);
             RuleFor(car => car.Price).NotNull();
+            RuleFor(car => car.Email).NotNull().EmailAddress();
         }
     }
 }

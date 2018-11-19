@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="email_error" xml:space="preserve">
-    <value>电子邮件格式不正确。</value>
+    <value>Email格式不正确。</value>
   </data>
   <data name="greaterthanorequal_error" xml:space="preserve">
     <value>{PropertyName}必须大于或等于{ComparisonValue}</value>
@@ -157,12 +157,12 @@
     <value>{PropertyName}不能超过{expectedPrecision}位</value>
   </data>
   <data name="CarViewModelEmailDisplayName" xml:space="preserve">
-    <value>车的邮件</value>
+    <value>CarEmail</value>
   </data>
   <data name="CarViewModelNameDisplayName" xml:space="preserve">
-    <value>车的名字</value>
+    <value>CarName</value>
   </data>
   <data name="CarViewModelPriceDisplayName" xml:space="preserve">
-    <value>车的价格</value>
+    <value>CarPrice</value>
   </data>
 </root>

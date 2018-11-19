@@ -12,7 +12,6 @@ namespace CSWeFramework.Web.Models.Car
     //[Validator(typeof(CarValidator))]
     public class CarViewModel
     {
-        [Key]
         public int ID { get; set; }
         /// <summary>
         /// 名称
@@ -22,8 +21,9 @@ namespace CSWeFramework.Web.Models.Car
         /// <summary>
         /// 价格
         /// </summary>
-        [DisplayName("汽车售价")]
         public decimal Price { get; set; }
+
+        public string Email { get; set; }
 
         /// <summary>
         /// 创建时间

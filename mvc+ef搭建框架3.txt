@@ -55,7 +55,7 @@ ScriptBundle("~/Scripts/Jquery");//虚拟路径
 
 七、第三方验证框架
 1.nuget上找fluentvalidation包，然后安装项目所对应的mvc版本就可以，mvc版本如何查看？在引用中找到system.web.mvc.dll属性查看即可
-  知道，比如是mvc5版本，就下载 Install-Package FluentValidation.MVC5
+  知道，比如是mvc5版本，就下载  Install-Package FluentValidation.MVC5 -Version 6.2.1[最稳定]
  学习地址：https://www.cnblogs.com/libingql/p/3801704.html
 
 2.验证的都是在web下的。创建文件夹Validator

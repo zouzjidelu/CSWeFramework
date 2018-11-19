@@ -15,8 +15,8 @@ namespace CSWeFramework.Web
 
             routes.MapRoute(
                 name: "Default",
-                url: "{controller}/{action}/{id}",
-                defaults: new { controller = "Car", action = "Index", id = UrlParameter.Optional }
+                url: "{lg}/{controller}/{action}/{id}",
+                defaults: new { lg="zh-cn", controller = "Car", action = "Index", id = UrlParameter.Optional }
             );
         }
     }

@@ -9,21 +9,22 @@
    ValidatorOptions.ResourceProviderType=typeof(Resources);
 3.carviewmodel实体类加邮箱属性，。并在验证类中加上验证邮箱合法性，可以给提示信息【WithMessage】，如果加了提示信息
   会优先使用这里的提示信息，没加，就会去找验证资源模板。故：在验证资源模板中加上邮箱的验证提示
+
 4.CarViewModel类。属性中是否可以不打标签【DisplayName】。因为这里打上标签，以后做一个英文系统。会很麻烦
 5.mvc的规则。会默认找displayname，所以要告诉mvc不从这里找。从资源中找。
 故，要替换mvc的规则。
 
-6.在web下创建一个mvc扩展文件夹，自定义一个元数据提供者类。继承微软的元数据提供者，重写元数据创建方法
+6.在web下创建一个mvc扩展文件夹，自定义一个元数据提供者类CustomModelMetadataProvider。继承微软的元数据提供者，重写元数据创建方法
   思路：
   1.首先把微软自己生成元数据保存起来
   2.判断元数据类型是否为空
   3.获取元数据名称key【命名空间+属性名+元数据的displayname（就是属性上打的标签）】
   4.在验证资源管理中根据这个key找到displayname
   5.判断是否为空，不为空，替换微软元数据的displayname
-7.在(ExensionActivator)验证扩展激活器中，把当前的元数据提供者替换成自定义的元数据提供者。
+7.在(ExensionActivator)验证扩展激活器中，把（微软）当前的元数据提供者替换成自定义的元数据提供者。
 8.在验证资源中。将车名、价格，邮箱设置一下中文。就可以在页面中看到效果
   以后实现其他语言的系统，翻译一套模板即可
-  将资源copy一份改名为Resources-us.resx
+  将资源copy一份改名为Resources-en-us.resx
   然后将配置信息改成英文的
 
 9.在路由中的url可以配置一个语言的标致。根据zh-cn、 en-us 来识别不同的资源
@@ -34,6 +35,12 @@
   2.修改当前线程语言文化 
     Thread.CurrentThread.CurrentUICulture=new CultureInfo(lg);
     Thread.CurrentThread.CurrentCulture=new CultureInfo(lg);
+     理解 CurrentCulture、CurrentUICulture资料：   https://www.cnblogs.com/Joans/archive/2012/08/13/2636131.html
+    //当程序运行时，CurrentUICulture属性用来决定加载什么样的资源，而CurrentCulture属性用来决定诸如货币、数字和日期如何格式化。
+    //1.CurrentCulture属性的默认值是操作系统的User Locale，我们可以在控制面板里设置。
+    //2.CurrentUICulture属性的默认值是操作系统用户界面语言。
+
+
   3.当mvc启动的时候有一个filterconfig配置，将这个过滤器加入即可
   4.运行项目，通过更改lg来查看中英文切换
 
@@ -44,7 +51,18 @@
    4.打开页面。提交表单验证信息提示应该和名字一样。无论中英文切换都会改变
 
 总结：
+1.在实体类与验证逻辑分开后，存在一个问题。页面提示信息，以及每个属性的[DisplayName]说明，是否可以动态化？不在程序中写死？
+  拿Car来说。一般在程序中表单提交。会有一个文本框的[DisplayName]说明，比如 车名：<input type=text value=''/>,那么车名不能写死
+  以及提示车名的信息应该跟着文本框说明来辩，比如车名不能为空，换成英文版的系统就是 carName:<input type=text value=''/>
+  提示信息应该是Carname  Not is Null;以上知识点，就是围绕动态化提示来配置，操作的
+2.具体步骤。
+  a.在注册器中，将mvc资源库模板引入。
+  b.定义自定义元数据，在页面加载时，将判资源模板中是否有存在的资源，如果有，，没有，则使用微软自带的资源，并显示到页面上
+     比如 车名在资源模板中有配置就显示车名，否则就用微软自带的（仔细观察了下，就是属性名）
+  c.将属性的提示信息与属性的[DisplayName]说明保持一致，
+  d.通过filter，在方法执行前，查找路由，根据路由的语言版本，显示不同的元数据。资源模板信息
 
+3..好处：以后部署多语言，只需要资源库输copy一份出来，翻译一套其他语言的版本的资源库即可
 
 二、数据实体自动映射。两个实体之间相互转换
 1.在web项目中，安装包 Install-Package AutoMapper

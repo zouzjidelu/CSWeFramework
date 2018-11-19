@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using CSWeFramework.Web.Mvc;
 using CSWeFramework.Web.Validator;
 using FluentValidation;
 using FluentValidation.Mvc;
@@ -23,10 +24,16 @@ namespace CSWeFramework.Web.App_Start
         {
             //将mvc自带的验证器禁用
             DataAnnotationsModelValidatorProvider.AddImplicitRequiredAttributeForValueTypes = false;
-            //将untiy验证工厂注入
+            
+            //将untiy验证工厂注入【用户在输入信息后需要在工厂中找到对应的验证类，验证属性的合法性】
             UntiyValidatorFactory untiyValidatorFactory = new UntiyValidatorFactory(UnityConfig.GetConfiguredContainer());
+            
             //将第三方验证器加入
-            ModelValidatorProviders.Providers.Add( new FluentValidationModelValidatorProvider(untiyValidatorFactory));
+            ModelValidatorProviders.Providers.Insert(0, new FluentValidationModelValidatorProvider(untiyValidatorFactory));
+
+            //将微软的资源管理替换成自定义的资源管理器类，重写生成元数据类，替换成自定义的元数据DisplayName
+            ModelMetadataProviders.Current = new CustomModelMetadataProvider();
+
         }
 
     }
