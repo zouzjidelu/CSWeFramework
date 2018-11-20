@@ -165,4 +165,7 @@
   <data name="CarViewModelPriceDisplayName" xml:space="preserve">
     <value>车的价格</value>
   </data>
+  <data name="createCarButoon" xml:space="preserve">
+    <value>创建汽车</value>
+  </data>
 </root>

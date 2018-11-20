@@ -1,6 +1,8 @@
-﻿using CSWeFramework.Core.Domain;
+﻿using AutoMapper;
+using CSWeFramework.Core.Domain;
 using CSWeFramework.Service.Cars;
 using CSWeFramework.Web.Models.Car;
+using System;
 using System.Collections.Generic;
 using System.Web.Mvc;
 
@@ -9,9 +11,13 @@ namespace CSWeFramework.Web.Controllers
     public class CarController : Controller
     {
         private readonly ICarService carService;
-        public CarController(ICarService carService)
+        private readonly IMapper mapper;
+        private readonly MapperConfiguration mapperConfiguration;
+        public CarController(ICarService carService, IMapper mapper, MapperConfiguration mapperConfiguration)
         {
             this.carService = carService;
+            this.mapper = mapper;
+            this.mapperConfiguration = mapperConfiguration;
         }
 
         // GET: Car
@@ -30,10 +36,11 @@ namespace CSWeFramework.Web.Controllers
         [HttpPost]
         public ActionResult Create(CarViewModel car)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                var keys=ModelState.Keys;
-                var values=ModelState.Values;
+                Car model = mapper.Map<CarViewModel, Car>(car);
+                model.CreateTime = DateTime.Now;
+                this.carService.CreateCar(model);
             }
 
             return RedirectToAction("Index");

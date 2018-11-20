@@ -53,10 +53,10 @@
 总结：
 1.在实体类与验证逻辑分开后，存在一个问题。页面提示信息，以及每个属性的[DisplayName]说明，是否可以动态化？不在程序中写死？
   拿Car来说。一般在程序中表单提交。会有一个文本框的[DisplayName]说明，比如 车名：<input type=text value=''/>,那么车名不能写死
-  以及提示车名的信息应该跟着文本框说明来辩，比如车名不能为空，换成英文版的系统就是 carName:<input type=text value=''/>
+  以及提示车名的信息应该跟着文本框说明来改变，比如车名不能为空，换成英文版的系统就是 carName:<input type=text value=''/>
   提示信息应该是Carname  Not is Null;以上知识点，就是围绕动态化提示来配置，操作的
 2.具体步骤。
-  a.在注册器中，将mvc资源库模板引入。
+  a.在验证器注册器中，将mvc资源库模板引入。
   b.定义自定义元数据，在页面加载时，将判资源模板中是否有存在的资源，如果有，，没有，则使用微软自带的资源，并显示到页面上
      比如 车名在资源模板中有配置就显示车名，否则就用微软自带的（仔细观察了下，就是属性名）
   c.将属性的提示信息与属性的[DisplayName]说明保持一致，
@@ -86,6 +86,25 @@
   
   然后可以在aciton方法中通过 mapper.Map<CarViewModel,Car>(model);//第二个参数可以自己配置，名字不一样可以动态指定
   Index 、Create
+
+问题：
+页面除了表单语言化，但是其他的还没弄，比如title，按钮，等等都应该是中英文切换的方式
+
+1.查看页面都是通过mvc模板生成的，需要扩展view（view本质是一个类），这里需要扩展
+弹出自己的东西，比如@T，T传入一个值，现在是不行的
+view下面有个webconfig，打开会发现 pages节点下面有一个pagebasetype，，是一个WebViewPage
+如果扩展需要继承此类，扩展自己的东西
+2.所有的扩展在mvc文件夹下，创建一个抽象类CustomViewPage,继承WebViewPage<TModel>(TModel展示的视图模型)
+  并不是所有的都实现，所以是一个抽象类，部分使用自己的，其他的还是使用微软的
+  2.1 创建一个T方法，传入一个参数key
+  2.2 通过key，在资源模板中找到对应的值，展示到页面上
+  2.3将view文件夹下的webconfig中的WebViewPage替换成自己写的自定义的CustomViewPage
+  2.4 测试下，将title以及按钮替换成T("createbuttontext"); 
+  2.5 在资源模板中 加createbuttontext的资源数据
+  2.6 运行项目，查看效果
+  2.7 页面其他地方也可以通过这种方式进行语言化。
+
+ 
 
 三、权限
 实体权限 Core类库Domain文件夹下的BaseEntity公共的id

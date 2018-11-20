@@ -88,6 +88,15 @@ namespace CSWeFramework.Web.Properties {
         }
         
         /// <summary>
+        ///   查找类似 创建汽车 的本地化字符串。
+        /// </summary>
+        public static string createCarButoon {
+            get {
+                return ResourceManager.GetString("createCarButoon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 电子邮件格式不正确。 的本地化字符串。
         /// </summary>
         public static string email_error {

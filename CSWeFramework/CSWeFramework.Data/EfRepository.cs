@@ -40,7 +40,7 @@ namespace CSWeFramework.Data
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            this.dbSet.Remove(entity);
+            this.DbSet.Remove(entity);
             this.dbContext.SaveChanges();
         }
 
@@ -51,7 +51,7 @@ namespace CSWeFramework.Data
 
         public T GetById(object id)
         {
-            return this.dbSet.Find(id);
+            return this.DbSet.Find(id);
         }
 
         public void Insert(T entity)
@@ -60,7 +60,7 @@ namespace CSWeFramework.Data
             {
                 throw new ArgumentNullException(nameof(entity));
             }
-            this.dbSet.Add(entity);
+            this.DbSet.Add(entity);
             this.dbContext.SaveChanges();
         }
 

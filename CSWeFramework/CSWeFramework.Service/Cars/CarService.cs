@@ -30,6 +30,8 @@ namespace CSWeFramework.Service.Cars
         public void CreateCar(Car car)
         {
             this.carRepository.Insert(car);
+            //新增清除缓存
+            this.cacheManager.Clear();
         }
 
         public void DeleteCar(Car car)
