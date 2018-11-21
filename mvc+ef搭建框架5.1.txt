@@ -1,0 +1,52 @@
+主题系统实现：
+创建ThemeActionFilter类，实现IActionFilter接口
+在FilterConfig中添加此主题filter
+在action执行之前，
+1.获取路由中的主题。传入主题辅助类中
+2.在主题文件夹下创建创建红。绿文件夹，然后在红绿文件夹下创建view文件夹，在view文件夹下创建主题视图页面
+   引入样式，@Style.Rend("~/Content/css"); 
+3.在主题辅助类中，除了自己定义的引擎视图外，还需将微软的视图引擎需要补充完整
+  百度搜索 mvc viewengine custom 
+
+
+四、mvc布局
+上
+下--左右--右--上下
+
+将页面全部拷贝web下 命名为AcdLib
+1.在BundleConfig中将样式文件进行绑定，
+2.在Shared文件夹下创建_Master页面
+  a.在title中加 -汽车管理系统
+  b.在head中引用样式
+  c.用户可能在自己页面中引用自己的样式，需要给一个坑，让用户自己填
+    @RenderSection("styles",required:false); 
+  d.在body中添加部分视图坑  @Hteml.Partial("_NavBarPartialPage")
+3.添加部分视图 _NavBarpartialPage
+4.添加侧面，右面的部分试图，
+a.部分视图内分为左右
+  在底部同样可以让用户引入自己的js文件
+@RenderSection("script",required:false); 
+5.测试模板视图
+  
+五、实体类中有写固定的标识，比如sex是bool类型，null代表保密，true表示男，false表示女
+在Shared文件夹下创建文件夹：显示模板（DisplayTemplates），编辑模板(EditorTemplates)，名字固定, 
+1.在文件夹下创建Sex视图 ,日期视图，在视图中做一定处理，
+2.在sex属性上打上标签[UIHint("Sex")]
+
+六、在控制打路由标签，并在路由中，配置，允许开启在mvc中控制，action中打路由标签
+七、视图中价格显示两位小数 
+   
+      @String.Format("{0:C}",price); //c代表货币类型
+两种方式
+1.在app_code 创建一个myhelper页面写入扩展的公共方法
+2.写静态类，写扩展方法。进行扩展，在view下加上这个类的命名空间，在页面中使用会有提示
+八、ajax表单提交
+1.创建ajax控制器，视图，引入jq库
+2.微软自带的ajax异步表单提交，@using(Ajax.BeginForm("",""))
+
+
+
+
+
+    
+  
