@@ -1,0 +1,50 @@
+一、异常处理，替换自定义的异常处理类。拦截异常。写入日志
+1.创建自定义错误异常处理类，继承微软的异常处理类  CustomHandleHandleErrorAttribute:HandleErrorAttribute
+
+2.重写异常方法
+  a.将异常设置为已捕捉到   filterContext.Exceptionhandled=true;
+  b.获取异常。解析日志对象。然后将异常信息记录在日志中
+  c.给用户返回当前上下文。 Result=new HttpStatusCodeREsult(HttpStatusCode.Internal);
+3.创建一个ActionFilterRegister注册器类，继承IDependencyRegister,
+  将自定义异常处理类，注册到容器中
+4.制造一个错误异常，查看效果
+5.可以创建一个错误页，跳转到错误页
+
+二、CDN静态引用的问题
+   1.微乳提供了VS打包的方法。添加虚拟路径。以及真实路径，统一将真实路径打包到设置的虚拟路径中
+   2.使用大厂的js库。地址写大厂的地址，这样可以使用大厂的cdn
+   3.百度搜索CDN公共类库   
+   4.设置cdn为true，有限考虑百度的。如果不设置优先使用本地
+   5.设置bundleTable.EnableOptimizations=true;允许压缩
+
+    在bundleCofig类中添加引入百度的jq公共库
+     bundles.Add(new ScriptBundle("~/Scripts/Jquery","百度公共库地址"));
+
+三、跨站攻击
+1.跨站伪造请求攻击CSRF
+2.跨站脚本注入攻击XSS【输入框内输入js函数等等，页面会提示潜在的危险值。通过在action上打上输入验证标签设置为false，即可不验证】
+
+解决方案在表单中写
+@Html.AntiForgeryToken();
+并在aciton上打一个标签 
+
+其实可以通过https的方式解决以上问题
+模拟制造攻击
+1.创建CSRF控制器
+2，创建发布公告的action
+
+四、视图引擎
+在mvc中，如果地址栏中输入一个地址不存在，会抛出黄页，并提示从view/index下找
+
+支持自己位置的搜索视图【可能有几套项目模板皮肤】
+1.新建视图虚拟路径类，【创建自己的视图引擎】，继承微软的虚拟试图引擎，
+  public  class  MyVirtualPathProviderViewEngine:VirtualPathProviderViewEngine
+2.添加一个主题文件夹-》添加Red、Green绿色文件夹
+3.在mvc文件夹下新建一个主题工具类 ThemeHelper
+  a.创建一个变更主题方法。传入主题名字的参数
+  b.获取微软默认注入的视图引擎；找到类型是Razor视图引擎，
+  c.view本地路径
+4.新建路由。带有主题的路由
+  url:"{theme}/{Controller}/{action}"
+
+   
