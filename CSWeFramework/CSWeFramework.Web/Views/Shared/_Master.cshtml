@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title - 汽车管理系统</title>
+    @Styles.Render("~/Styles/Bootstrap")
+    @Styles.Render("~/Styles/Font-Awesome")
+    @Styles.Render("~/Styles/Fonts-Googleapis")
+    @Styles.Render("~/Styles/Ace-Template")
+
+    @* user custom style *@
+    @RenderSection("styles", required: false)
+</head>
+<body class="no-skin">
+
+    @*添加顶部部分视图*@
+    @Html.Partial("_NavBarPartialPage")
+
+    <div class="main-container" id="main-container">
+        @* 左侧菜单 *@
+        @Html.Partial("_SideBarPartialPage")
+
+        @RenderBody()
+
+        @* 底部版权 *@
+        @Html.Partial("_FooterPartialPage")
+    </div>
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>

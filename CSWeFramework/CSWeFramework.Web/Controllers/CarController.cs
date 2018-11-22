@@ -24,7 +24,8 @@ namespace CSWeFramework.Web.Controllers
         public ActionResult Index()
         {
             List<Car> cars = carService.GetCars();
-            return View(cars);
+            List<CarViewModel> carList = mapper.Map<List<Car>, List<CarViewModel>>(cars);
+            return View(carList);
         }
 
         [HttpGet]
