@@ -1,0 +1,43 @@
+resultapi标准框架
+webapi和mvc的请求管道完全是两种概念
+mvc 在iis服务器上运行
+
+webapi不需要。轻量级的框架，可以在任何进程当中宿主
+为什么说mvc和webapi是没有关系呢
+1.可以看下路由。 他们的路由都是不同的实现。
+2.在mvc中实现的过滤器，在webapi也不能直接使用
+
+webapi专门写主流接口，
+wcf：核心是多台机器之间通信框架
+webapi主要写接口
+
+一、创建efcode
+1.安装ef  Install-Package EntityFraework
+2.创建dbcontext SampleDbContext:继承DbContext
+   构造函数参数创建一个数据库链接名字
+   public  ctor ():base("Sample")
+3.在dbcontex 创建 DbSet<book> books{get;set;}
+4.创建book实体类 id，name，price
+5.webconfig，写数据库连接字符串  <add name="Sample" connectionString="server=.;uid=sa;pwd=pass@123" prov...=system.sql....
+6.Enable-Migration 启动迁移，生成数据库表
+   生成了迁移的文件夹，在文件夹中改为自动迁移
+   加上默认数据
+   seed方法中加
+   context.Books.AddOrUpdate(new Book{...},new Book{...});
+7.update-database 更新数据库
+
+数据库初始化完成后、创建一个webapicontroller
+efwebapi。选择efbook，自动生成book ef
+
+二、创建webapiController
+webapi直接使用ef不稳妥，可以使用webapi模板，和之前讲的mvc模板一样
+找到模板之后，在webapi中创建一个CodeTemplates文件夹并把模板复制进去
+就可以修改为自己的模板
+然后在创建一个新的webapicontroller，可以查看就是自己定义的模板生成的
+三、webapi调用【跨域调用】
+1.创建一个html页面，引用bootstarp。jq，可以在bootcdn中找到引用地址
+
+
+
+
+
