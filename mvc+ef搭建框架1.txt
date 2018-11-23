@@ -49,8 +49,15 @@ mvc和ef搭建框架1
      c.PageConfig.cs,
    4.安装unity容器。nugte上找到安装unity mvc 的命令  Instal-Package Unity.Mvc，安装在CarManager.Web项目下
    5.在CarManager.core中创建Log文件夹，mvc推荐使用NLog 不是log4，命令方式安装  Install-Package NLog -Pre
+     以及NLog.config，两个组件。安装完成后在NLog.config文件中配置相关参数。可以配置，将日志通过邮件的方式发送、
+     通过数据库方式记录。通过文本文档的方式记录。并可以设置这些记录方式的级别。高于某个级别的日志，都将会按照某种记录的方式记录下来
+
+     具体请看配置文件
+       创建Ilogger接口，实现ILogger接口
 	a.ILogger 接口
+
 	b.NullLogger
+        c.NLogger
 
        
    

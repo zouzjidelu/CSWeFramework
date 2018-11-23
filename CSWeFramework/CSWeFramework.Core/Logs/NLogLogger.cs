@@ -58,6 +58,8 @@ namespace CSWeFramework.Core.Logs
         public void Warn(string message, Exception exception)
         {
             logger.Warn(exception, message);
+           
         }
+
     }
 }

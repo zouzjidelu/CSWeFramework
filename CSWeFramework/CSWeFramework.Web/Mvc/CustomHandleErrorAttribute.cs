@@ -15,8 +15,9 @@ namespace CSWeFramework.Web.Mvc
             filterContext.ExceptionHandled = true;
             ILogger logger = ServiceContainer.Resolve<ILogger>();
             logger.Error("发现未处理的异常", filterContext.Exception);
+            logger.Fatal("致命错误", filterContext.Exception);
 
-            filterContext.Result=new ViewResult() { ViewName = "Error",ViewData=new ViewDataDictionary(filterContext.Exception) }; 
+            filterContext.Result = new ViewResult() { ViewName = "Error", ViewData = new ViewDataDictionary(filterContext.Exception) };
         }
     }
 }
