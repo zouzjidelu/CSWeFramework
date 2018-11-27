@@ -1,0 +1,102 @@
+     实时推送、监控系统 、轮询、SignalR[自动升级、降级的功能]。
+     客户端与浏览器通过soket进行长连接，需要打开。不需要关闭
+     微软signalr官网：www.asp.net/signalr  服务端要求winserver 7 以上 、iis8以上  
+     查看服务端与客户端要求https://docs.microsoft.com/en-us/aspnet/signalr/overview/getting-started/supported-platforms 
+     signalr走的不是http协议是soket协议
+
+场景：
+把服务器的cpu信息实时监控发送到某个页面，打开即可看到cpu使用率信息   
+一、建立解决方案 CpuSample
+二、创建mvc项目 WebSite【SignalR与mvc没关系】
+三、nuget 引用安装微软的 SignalR Install-Package Microsoft.AspNet.SignalR  -version 2.2.0
+      安装完会发现在引用中多了两个dll 分别为：Microsoft.Aspnet.SignalR.Core、Microsoft.Aspnet.SignalR.SystemWeb
+      并在Scripts文件夹下有两个js库 jquery.signalR-2.2.0.js、 jquery.signalR-2.2.0.minjs,并且会有一个readme.txt帮助页
+四、创建SignalR文件夹
+      1.添加启动signalr的类（Startup）、并且打一个标记，在程序启动之前执行
+         [assembly:OwinStartup(typeof(WebSite.SignalR.Startup))]
+      2.写一个配置方法Confiuration，参数是固定的，框架要求的 IAppBuilder 【没有智能提示，注意单词拼写，需要跟readme.txt文档的启动方法一致，最好copy过来】
+         public void configuation(IAppBuilder appBuilder){ appBuilder.MapSignalR();}
+      3.接收、转发消息 需要一个中转站，新建一个类MessageHub,继承微软的signalR的Hub
+         写一个方法，作为发消息的功能   
+         public void SendMessage(string message)
+          { 
+           //给所有用户发送消息
+            Clients.All.SendMessage(message);//名字随意写，没有提示，主要在前端会找自定义的名字
+              //给某个用户
+             Clients.Use(message); 
+             
+           }
+五、新建一个控制台程序，主要收集cpu信息，名称为收集器 Collector
+六、在控制台程序（收集器） nuget 安装微软提供的SignalR.client客户端  Install-Package Microsoft.Asp.Net.SignalR.Client
+      正是有这个客户端提供了接口，方便我们去跟hub传递数据，
+
+      1.建立hub连接  var hubConnection =new HubConnection("http://localhost:xxxx");//传入一个地址，也就是web启动的地址
+      2.创建hub代理  IHubProxy hubProxy=hubConnection.CreateHubProxy("MessageHub");//要指定创建的是哪个hub的代理，,这里是MessageHub
+      3.启动连接  hubConnection.Start().Wait();//等待连接完成。hub连接构建完成后、读cpu信息
+      4.读取cpu信息
+         PerformanceCounter  cpuCounter=new  PerformanceCounter();
+          cpuCounter.CategoryName="Processor";
+          cpuCounter.CounterName="% Processor Time";
+          cpuCounter.InstanceName="qq.exe";//代表监控qq的exe 如果所有就是 "_Total";//固定写法
+        //我们需要不停的收集，所以写一个死循环 
+          while(true){
+ 	//cpu使用率
+	string cpuUsage=           (cpuCounter.NextValue()).ToString();
+	Console.Write(cpuUsage);//打印使用率
+              //查看连接状态
+            if(hubConnection.State==ConnectionState.Connected){
+	//x像Hub推送cpu使用率到SendMessage.
+	hubProxy.Invoke("SendMessage",cpuUsage);
+	}
+	//每次收集完停止1s
+                Task.Delay(TimeSpan.FromSeconds(1)).wait();
+
+     }
+七、创建静态网页【客户端】 TestClient.html
+      1.引用jquery库、sinalR-2.2.0.minjs库
+      2.通过曲线图来展示cpu使用率
+      3.写入一个连接hub的函数  
+         function connectionHub(){
+	var connection=$.hubConnection();//构建连接
+	var proxy=connection.createHubProxy("MessageHub");//创建hub连接代理
+	proxy.On("SendMessage",function(data){
+	//拿到值，更新页面的曲线图
+	updateCahrt(data);
+	});
+	//启动连接
+	connection.Start();
+
+	}
+         4.在bootcdn.cn中查找flot库    //cdn.bootcss.com/flot/0.8.3/jquery.flot.min.js
+         5.引用script flot库
+         6.创建一个div 命名id=interactive style=height:800px;width:100%
+         7. 拷贝代码。    
+八、启动项目预览效果 【多项目启动解决方案属性--多项目启动--保存】先启动website，在启动收集器控制台程序
+
+以上是讲解的singalr的实时推送事例
+----------------------WebApi知识点讲解-----------------------  
+打开webapi入门1的项目
+一、创建一个窗体应用程序[WebApiTest]，进行webapi调用
+1.当请求到别人的json 数据时，需要用到数据，解析json数据，这时需要创建一个类
+把json数据拷贝进去，写入属性。这样很麻烦，微软提供了一个功能，
+复制json数据在vs最上面选项中   编辑---选择性粘贴---将json粘贴为类，就会生成一个类出来，这样很方便、如果有100个字段使用这个工具就很方便
+2. 通过httpclient调用webapi 
+    HttpClient client=new HttpClient();
+    client.BaseAddress=new Uri("http://127.0.0.1:8888");
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));//添加媒体类型
+    
+    HttpResponseMessage response=client.GetAsync("api/books").Result;
+    if(response.IsSuccessStatusCode){
+        var book=response.Content.ReadAsAsync<Book>().Result;       	
+	console.write(book.name);
+    }else
+{
+	Console.Write(response.StatusCode+response.ReasonPhrase);
+}
+
+//还有post、put、delete请求方式  
+ client.PostAsync();.......
+ Console.Readkey();
+测试调用api接口，会发现报错，需要引用一个json库 newtonsoft.json
+
+ 
