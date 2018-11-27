@@ -17,7 +17,7 @@ namespace CSWeFramework.Service
     {
         public void RegisterType(IUnityContainer container)
         {
-            container.RegisterType<ILogger, NullLogger>();
+            container.RegisterType<ILogger, NLogLogger>();
             container.RegisterType<ICacheManager, MemoryCacheManager>();
         }
     }

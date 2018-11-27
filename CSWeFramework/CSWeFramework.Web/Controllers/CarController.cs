@@ -23,6 +23,10 @@ namespace CSWeFramework.Web.Controllers
         // GET: Car
         public ActionResult Index()
         {
+            int a = 1;
+            int b = 0;
+            int c = a / b;
+
             List<Car> cars = carService.GetCars();
             List<CarViewModel> carList = mapper.Map<List<Car>, List<CarViewModel>>(cars);
             return View(carList);
