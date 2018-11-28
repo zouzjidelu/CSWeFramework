@@ -97,6 +97,71 @@
 //还有post、put、delete请求方式  
  client.PostAsync();.......
  Console.Readkey();
-测试调用api接口，会发现报错，需要引用一个json库 newtonsoft.json
 
- 
+测试调用api接口，会发现报错，错误消息序列化出现的一个错误，没有依赖项，需要引用一个json库 newtonsoft.json
+然后会发现接收到了webapi返回的数据
+
+3.http客户端管道  百度搜索 图片 webapi管线 ，会有一张图图。从图中可以看出，每次客户端请求服务器都会经过  message handle 
+   那么我们可以扩展handler。不用每次都做同样的操作【图片已经下载保存名字为 webapi管线.png】
+
+比如某些api在头部加些东西才能请求，不可能每次都加，所以要扩展一个自己的hanlder，不管request或者response都会经过自定义的hanlder
+
+创建一个类 MyMessageHandler:DelegatingHandler并继承webapi管道handler
+重写SendAsync、方法内添加一个自定义的计数器，超过一百次就停止
+private static int counter=0;
+
+ request.Headers.Add("x-custom-heander",(++counter).ToString());
+
+写完之后植入到管道中，在new HttpClinet();会有一个参数这个参数就可以指定自己的handle
+也可以使用HttpClientFactory.Create(new MyMessageHeandler());
+
+4.异常处理
+api异常处理、给调用api的人提示错误信息，最常用的方式定义过滤器
+和mvc的过滤器差不多，但是不一样
+在SampleWebapi中添加一个文件夹Filters、并添加一个类叫自定义处理错误类【CustomExceptionFilterAttribute】,
+并继承微软处理异常的类，引用system.web.http.Filters;类，然后继承ExceptionFilterAttribute
+并重写 OnException异常方法
+
+a. actionExecuteContext.Response=new  System.Net.Http.HttpResponseMessage();
+b.在webapiConfig中配置自定义的异常处理类，config.Filters.Add(new CustomExceptionFilterAttribute());
+   并可以记录日志，具体记录日志，在前面章节中讲解mvc异常处理已经讲过，这里不在重复
+c.如果指定某个action进行异常处理捕捉，就在对应的aciton上打印这个attribute，如果需要整个控制器处理异常，就在控制器上打此标签
+
+在验证信息正确、错误、异常等信息时可以使用微软提供的错误消息码，不必自己定义一个类
+类中写code、message、data属性。
+
+5.model验证和mvc的model验证一样
+将book实体属性打上验证标签，然后在方法中写以下代码
+  public  HttpResponseMessage Post(Book book){
+  if(!ModelState.IsValid){
+   request.CreateErrorResponse(HttpStatusCode.BadRequest,ModelState);
+}
+return Request.CreateResponse(HttpStatusCode.OK);
+}
+会发现如果与验证标签不符合的属性都会显示出来错误信息，
+其实可以使用在之前讲的mvc+ef时的一个验证框架 用法一模一样。之前搜索的是的（FluentValidation.MVC）现在
+在nuget上搜索 FluentValidation.WebApi,就可以和mvc验证的方式一样了。
+
+
+a.图片百度搜索 webapi handle 查看请求过程
+b.创建一个 CustomMessageHandler类，继承DelegatingHandler
+   重写  SendAsync  然后打印一个日志，会发现每次请求都会打印一次日志
+   Debug.WriteLine("日志内容 Start");
+var response=await base.SendAsync(request,cancel....);
+   Debug.WriteLine("日志内容 End");
+ return response;
+ c.在webapiconfig类中添加 config.MessageHandelrs.Add(new CustomMessageHandler());//可以定义一个接口计数器，某个接口是收费的，调用一次，少一次，规定的次数
+    调完，需要重新付费，这也是一个非常厉害的权限系统
+d.如果某些属性不需要序列化，可以在属性上打上标记 [JsonIgnore]（如果是jsonnet序列化器才能用此标签）
+
+6.把webapi的知识点整合到mvc+ef框架中去
+a.在mvc中，都是通过依赖注入的方式进行获取对象，那么在 webapi中依然如此，
+   在nuget上搜索  Unity.WebApi      Install-Package Unity.WebAPI -version 5.2.3
+b.在webapi项目下安装 unitywebapi【自动把webapi库自动注入进去】、安装完成后会有一个帮助文档 readme.txt
+   有说明如何使用、操作步骤
+c.在app_start文件夹下多了一个UnityConfig配置，
+d.在Gloable中讲untiy配置注入进去  UnityConfig.RegisterCommponents(); //这里可以通过mvc在配置unity时有一个untiy激活器，在激活器中讲这些配置注入进去，这里写在gloab中是涂简单
+e.类型查找器查找出来，注入到容器中，这个代码直接拷贝mvc的unity配置的信息。然后需要引入 core、data、server、webcore类库
+f.可以将验证框架引入到webapi中。【FluentValidation.WebApi】
+
+
