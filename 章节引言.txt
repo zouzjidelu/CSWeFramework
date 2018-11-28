@@ -19,5 +19,7 @@
       主题模板（当输入的地址找不到，默认找到自己设置的主题模板）、mvc布局。html模板引入
       在view层做静态扩展、微软自带ajax异步操作html.BeginForm("");
 六、mvc+ef搭建框架6
-      webapi系列：
+      webapi入门1 主要讲了webapi的 与efcode的结合使用、webapi模板的引入、webapi调用的四种方式post、put、delete、get
+      、以及跨域问题、解决跨域的两种方式（jsonp、cors）、api文档生成、通过微软自己生成的pai文档  、以及第三方swagger插件的生成
+       、webapi宿主在自己创建的服务器上、引入微软的宿主插件SelfHost、并重新建立一个仓库专门做知识点测试、练习的仓库。
       	

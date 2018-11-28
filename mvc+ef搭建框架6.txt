@@ -29,15 +29,138 @@ webapi主要写接口
 数据库初始化完成后、创建一个webapicontroller
 efwebapi。选择efbook，自动生成book ef
 
+
 二、创建webapiController
 webapi直接使用ef不稳妥，可以使用webapi模板，和之前讲的mvc模板一样
-找到模板之后，在webapi中创建一个CodeTemplates文件夹并把模板复制进去
+找到模板之后， C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\Extensions\Microsoft\Web\Mvc\Scaffolding\Templates  复制一个 ApiControllerEmpty文件夹
+
+在webapi中创建一个CodeTemplates文件夹并把模板复制进去
 就可以修改为自己的模板
 然后在创建一个新的webapicontroller，可以查看就是自己定义的模板生成的
-三、webapi调用【跨域调用】
-1.创建一个html页面，引用bootstarp。jq，可以在bootcdn中找到引用地址
+
+三、webapi调用
+1.创建一个html页面（ApiTest），引用bootstarp。jq，可以在bootcdn中找到引用地址 https://www.bootcdn.cn/all/
+  并在页面中写put、post、delete、get的按钮，进行测试
+
+2.属性--web--找到url，改成http://127.0.0.1:8888/
+3.运行项目发现ApiTest报400错误、需要在右下角找到 IIS Express ---显示所有程序---找到当前运行的webapi站点--点击配置----搜索localhost 删除site节点，只留下一个（ <site name="SampleWebApi(1)" id="3">），并修改binding节点为<binding protocol="http" bindingInformation="*:8888:127.0.0.1" /> ------保存，重新生成项目，访问http://127.0.0.1:8888/ApiTest.html
+
+4.根据页面中的按钮写入对应js函数，调用后端api
+  function getBooks(){ $.getJSON(url:"//127.0.0.1:8080/api/book",success:function(data){alert(JSON.stringify(data))})}
+
+ function getBook(){ $.getJSON(url:"//127.0.0.1:8080/api/book/1",success:function(data){alert(JSON.stringify(data))})}
+
+ function add(){
+  $.ajax({
+	url:"//127.0.0.1:8080/api/book/",
+	type:"POST",
+	data:{"Name":"java","price":"33"},
+	success:function(data){
+	alert(JSON.stringify(data))
+}
+})
+}
+
+  //put 修改
+ function put(id){
+  $.ajax({
+	url:"//127.0.0.1:8080/api/book/"+id,
+	type:"PUT",
+	data:{"Name":"java2","price":"33.3"},
+	success:function(data){
+	alert(JSON.stringify(data))
+}
+})
+}
 
 
+ function delete(id){
+  $.ajax({
+	url:"//127.0.0.1:8080/api/book/"+id,
+	type:"delete",	
+	success:function(data){
+	alert(JSON.stringify(data))
+}
+})
+}
 
+四、webapi跨域问题
+
+1.域名不同，比如api.xcode.me\web.code.me,访问不同域名下的webapi。这是一种安全机制。
+什么情况下认为是同一个域名下？是授信的？什么情况下是不同域名下？
+2.百度搜索 浏览器同源策略  查看跨域问题 https://developer.mozilla.org/zh-CN/docs/Web/Security/Same-origin_policy
+
+3.再创建一个webapi项目、创建一个html页面。将创建第一个webapi项目中的htmlcopy过来，进行访问 127.0.0.1:8888
+  调用创建的第一个webapi项目中的接口。会出现网络错误，拒绝访问。跨域问题
+ 【Failed to load http://127.0.0.1:8888/api/Books: No 'Access-Control-Allow-Origin' header is present on the requested resource. Origin 'http://localhost:35856' is therefore not allowed access.】
+  
+4.jsonp。默认情况引用脚本如果是不同域名下的。理应会出现跨域问题，但是通过拿到脚本的请求路径
+  之后。通过一个函数再去请求。就不会出现跨域问题【欺骗浏览器】。这也是jsonp的原理
+
+解决跨域方式：
+
+1.通过jsonp的方式。在前端传递给后端数据时，请求数据类型 为 jsonp。【在请求后端过程中可以f12查看，在url后面会带一个callback参数。这个参数实际上是一个未生成的函数。传入后端后。后端接收（类似这样的一个字符串 callback=jQuery33108762584328839569_1543300008344）】，接收参数，序列化一个json字符串，传递给httpresponsemessage的content属性。前端拿到后，会默认调用这个callback回调函数（实际上回调函数就是success函数的代理。会去执行success）。这也就是通过jsonp的方式去解决跨域问题。但是对于后端而言，工作量变大，每次请求过来都需要进行接收回调函数，并序列化数据，返回给http返回管道。很麻烦。那么安装一个jsonp插件就可以了，以后正常业务，返回数据的时候，自动会加上
+
+a.安装第三方插件 jsonp   Install-Package WebApiContrib.Formatting.Jsonp -Version 3.0.2
+
+  a.在App_Start WebApiConfig.cs引用安装的第三方插件。并在Register方法结尾处加上  config.AddJsonFormatter();
+    所有方法就支持jsonp了。
+  b.在方法中就不需在通过HttpReponseMessage来返回数据了,也不需要接收calbbcak参数。这些都有此插件帮忙完成。
+
+
+2.在方法头部标明是否允许跨域 CORS 【跨域资源共享，w3c提供的一个跨域解决方案】，jsonp的方式不友好，需要客户端与      服务端都同时支持才可以。【接收参数，返回回调】
+  那么CORS在服务端方法头部去标明跨域域名资源、如果做了域名限制列表，只要请求的域名在限制列表中，就不允许访问。
+  支持很多浏览器。如何查看是否浏览器支持 bings 搜索 cors browser support 查看各浏览器支持的版本
+  
+  nuget 安装 Install-Package Microsoft.AspNet.WebApi.Cors 【微软提供的支持cors解决方案】
+  在App_Start WebApiConfig.cs  并在Register方法结尾处加上  config.EnableCors();//允许跨域
+  将之前安装的jsonp插件注释掉
+  需要在方法上打一个标记[EnableCors("http://localhost:24743","*","*")]//第一个参数是允许跨域的请求url，第二个参数  允许什么样的头来请求。默认所有，第三个参数允许的方法。[post,get]，默认所有
+
+原理：
+在请求的过程中，会发现在请求头部的heander 会有一个允许跨域的标识 Access-Control-Allow-Origin: http://localhost:35856
+
+五、api文档生成 
+
+  1.在项目中  右键属性--生成--输出xml文档，重新生成项目
+  2.在bin下会找到一个xml文件类型的 xml文档。然后打开，会发现生成的程序集，方法注释都在这里。
+  3.在Area【分区】文件夹下找到HelpPage【帮助页】文件夹，有一个HelpPageConfig类，找到Register
+    方法，并通过配置提供者来生成文档，读取文档路径默认在App_Data文件夹下，名字改为当前项目的名字.xml
+    【config.SetDocumentationProvider(new XmlDocumentationProvider(HttpContext.Current.Server.MapPath	("~/App_Data/SampleWebApi.xml")));】、这里每次xml文档生成都在bin目录下，而读取的目录是在App_Data下，所以
+    每次生成后需要拷贝一份到App_Data文件夹下，页面上才可读取最新的api文档，也可以将文档输出目录输出到App_Data下
+    这样就不会出现每次拷贝的操作
+ 
+  4.读取文档路径设置完成后。找到 在Area文件夹下找到HelpPageAreaRegistration类（帮助页区域路由注册类），发现注册的     区域路由默认地规则是 Help/{action}/{apiId}  ,重新生成项目。访问 http://127.0.0.1:8888/Help 会发现api展示出来      了、给实体类。方法写上注释，在生成的api文档中也会有注释说明
+    但是，只提供了展示，没有提供测试的方法。下面引用第三方开源的api文档生成框架
+  5.nuget上搜索【swashbuckle】   Install-Package Swashbuckle
+    a.安装完成后会在App_Start下生成一个SwaggerConfig配置文件，打开此文件，需要将生成xml文档注释
+      打开。搜索GetXmlCommentsPath(),此方法GetXmlCommentsPath没有实现，需要自己实现。
+      此方法主要是返回文档生成的路径 
+    b.项目重新生成--访问http://127.0.0.1:8888/swagger/ui/index 就可以进行测试api，api返回的数据类型可以任意切换，      比如json/xml，那么是否可以在地址栏输入一个返回参数类型，返回具体的是xml/json数据格式的数据呢？微软是通过请求标头来判断是json/xml格式。但是不支持url参数来判断返回数据格式，这里需要扩展
+    c.在WebApiConfig中的Register方法里。在媒体类型映射中添加一个querystringmapping
+      在api接口中加参数 url:xxxx?format=json/xml 就会返回不同格式的数据
+    d.swagger学习文档 https://www.cnblogs.com/lhbshg/p/8711604.html
+
+六、webapi宿主
+1.通过控制台应用程序托管、创建MyServerHost控制台程序
+2.nuget安装自宿主插件  Install-Package microsoft.AspNet.WebApi.SelfHost
+3.引用system.web.http、system.web.http.SelfHost
+4.在bin debug目录下创建一个插件文件夹，命名为plugins ，放继承webapi的项目，并把webapi项目的dll拷贝到文件夹下
+5.获取插件文件夹下的插件地址
+6.遍历文件夹的dll。装载到程序集加载项中
+7.创建http自助服务配置地址 var config=new HttpSelfHostConfiguration("http://127.0.0.1:5678");//注意。不能与绑定到iis上的端口一样
+8.配置默认路由
+9.将配置放入自宿主服务中。并启动
+10.如果抛出异常无法注册http://xxx。说明需要通过管理员身份运行此exe
+11.如果抛出异 常试创建“BooksController”类型的控制器时出错。请确保控制器具有无参数公共构造函数。
+   说明错误在books控制器下，发现，获取books列表用到了ef，而ef，需要用到链接字符串。需要配置。
+   以及ef的dll引入、还需要一个注册表的dll，否则会报错注册表dll在nuget上引入 Install-Package WebActivatorEx -Version 2.2.0
+12.如何在自宿主的服务器上调试webapi中的代码？
+步骤：
+a.将自宿主服务器代码生成----拷贝bin-debug文件夹下的文件。在其他磁盘创建文件夹粘贴进去。然后启动自宿主服务。
+b.打开任务管理器。查看自宿主服务的pid ，如果没有显示pid ，则点击任务管理器上方的查看--选择列--将进程标识符Id勾选上就可以看到
+c.复制标识符id，将webapi项目设置为启动项。通过附加进程的方式附加。附加的进程为自宿主服务器的进程即可调试了。
+
+  
 
 
