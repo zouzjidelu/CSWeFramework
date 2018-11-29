@@ -59,7 +59,7 @@
          function connectionHub(){
 	var connection=$.hubConnection();//构建连接
 	var proxy=connection.createHubProxy("MessageHub");//创建hub连接代理
-	proxy.On("SendMessage",function(data){
+	proxy.on("SendMessage",function(data){
 	//拿到值，更新页面的曲线图
 	updateCahrt(data);
 	});
@@ -70,7 +70,11 @@
          4.在bootcdn.cn中查找flot库    //cdn.bootcss.com/flot/0.8.3/jquery.flot.min.js
          5.引用script flot库
          6.创建一个div 命名id=interactive style=height:800px;width:100%
-         7. 拷贝代码。    
+         7. 拷贝代码。      
+         8.学习float资料 https://www.cnblogs.com/wicub/p/4383359.html
+                                 https://www.cnblogs.com/chuhj/p/7160788.html
+		http://shuaizai88.iteye.com/blog/1227641//flot api文档 ，更多文档，百度搜索 flot api文档
+	
 八、启动项目预览效果 【多项目启动解决方案属性--多项目启动--保存】先启动website，在启动收集器控制台程序
 
 以上是讲解的singalr的实时推送事例
