@@ -14,6 +14,7 @@ namespace CSWeFramework.Web.App_Start
         public static void Start() 
         {
             var container = UnityConfig.GetConfiguredContainer();
+            UnityConfig.RegisterTypes(container);
 
             FilterProviders.Providers.Remove(FilterProviders.Providers.OfType<FilterAttributeFilterProvider>().First());
             FilterProviders.Providers.Add(new UnityFilterAttributeFilterProvider(container));

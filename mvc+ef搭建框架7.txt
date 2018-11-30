@@ -127,9 +127,9 @@ api异常处理、给调用api的人提示错误信息，最常用的方式定义过滤器
 并重写 OnException异常方法
 
 a. actionExecuteContext.Response=new  System.Net.Http.HttpResponseMessage();
-b.在webapiConfig中配置自定义的异常处理类，config.Filters.Add(new CustomExceptionFilterAttribute());
+b.在webapiConfig中配置自定义的异常处理类，config.Filters.Add(new CustomExceptionFilterAttribute());//如果不处理全局的异常。则不配置此项，单单某个aciton或者controller需要处理异常，就在方法或者类上打上异常标签即可！
    并可以记录日志，具体记录日志，在前面章节中讲解mvc异常处理已经讲过，这里不在重复
-c.如果指定某个action进行异常处理捕捉，就在对应的aciton上打印这个attribute，如果需要整个控制器处理异常，就在控制器上打此标签
+c.如果指定某个action进行异常处理捕捉，就在对应的aciton上打印这个attribute，如果需要整个控制器处理异常，就在控制器上打此标签。
 
 在验证信息正确、错误、异常等信息时可以使用微软提供的错误消息码，不必自己定义一个类
 类中写code、message、data属性。
@@ -145,6 +145,25 @@ return Request.CreateResponse(HttpStatusCode.OK);
 会发现如果与验证标签不符合的属性都会显示出来错误信息，
 其实可以使用在之前讲的mvc+ef时的一个验证框架 用法一模一样。之前搜索的是的（FluentValidation.MVC）现在
 在nuget上搜索 FluentValidation.WebApi,就可以和mvc验证的方式一样了。
+如果在验证的实体内属性上打了一些验证标签，此时。操作数据库会跑出异常【The model backing the 'SampleDbContext' context has changed since the database was created. Consider】，此异常意思是，数据库已经创建完毕，而这时在标签上打的验证标记，与数据库创建表时的属性规则不一致，解决此问题，就是在继承DbContext类中的构造函数中，忽略与数据库的表进行对比即可，也就是不尝试创建数据库  Database.SetInitializer<testContext>(null);
+具体参数定义请查看下方4条
+一：数据库不存在时重新创建数据库
+
+Database.SetInitializer<testContext>(new CreateDatabaseIfNotExists<testContext>());
+ 
+二：每次启动应用程序时创建数据库
+ 
+Database.SetInitializer<testContext>(new DropCreateDatabaseAlways<testContext>());
+
+三：模型更改时重新创建数据库
+
+ 
+Database.SetInitializer<testContext>(new DropCreateDatabaseIfModelChanges<testContext>());
+
+四：从不创建数据库
+
+ 
+Database.SetInitializer<testContext>(null);
 
 
 a.图片百度搜索 webapi handle 查看请求过程
@@ -154,7 +173,7 @@ b.创建一个 CustomMessageHandler类，继承DelegatingHandler
 var response=await base.SendAsync(request,cancel....);
    Debug.WriteLine("日志内容 End");
  return response;
- c.在webapiconfig类中添加 config.MessageHandelrs.Add(new CustomMessageHandler());//可以定义一个接口计数器，某个接口是收费的，调用一次，少一次，规定的次数
+ c.在webapiconfig类中添加 config.MessageHandelrs.Add(new CustomMessageHandler());//可以定义一个接口计数器，某个接口是收费的，调用一次，少一次，规定的次数，每次请求都会经过此消息管道，在管道中可以做一些自己的业务逻辑
     调完，需要重新付费，这也是一个非常厉害的权限系统
 d.如果某些属性不需要序列化，可以在属性上打上标记 [JsonIgnore]（如果是jsonnet序列化器才能用此标签）
 
@@ -164,7 +183,10 @@ a.在mvc中，都是通过依赖注入的方式进行获取对象，那么在 webapi中依然如此，
 b.在webapi项目下安装 unitywebapi【自动把webapi库自动注入进去】、安装完成后会有一个帮助文档 readme.txt
    有说明如何使用、操作步骤
 c.在app_start文件夹下多了一个UnityConfig配置，
-d.在Gloable中讲untiy配置注入进去  UnityConfig.RegisterCommponents(); //这里可以通过mvc在配置unity时有一个untiy激活器，在激活器中讲这些配置注入进去，这里写在gloab中是涂简单
+d.在Gloable中将untiy配置注入进去  UnityConfig.RegisterCommponents(); //这里可以通过mvc在配置unity时有一个untiy激活器，在激活器中讲这些配置注入进去，这里写在gloab中是涂简单
+
+   天坑：通过类型查找器获取需要注册到unity容器中的dll时，在循环CSWeFramework.Web.Core这个类库时，发现抛了一个异常，这个异常找了好久。网上找了一下。解决方法是：https://www.cnblogs.com/lsgsanxiao/p/4500782.html，然而就在这个类库下，一直在跟webapi项目进行对比，哪个dll没有引用。以及引用的版本是否一致。发现在web.core类库下，封装Json的时候用到了mvc的system.web.mvc.dl，发现这个和webapi生成dll版本不一致。改成一致就行了
+
 e.类型查找器查找出来，注入到容器中，这个代码直接拷贝mvc的unity配置的信息。然后需要引入 core、data、server、webcore类库
 f.可以将验证框架引入到webapi中。【FluentValidation.WebApi】
 

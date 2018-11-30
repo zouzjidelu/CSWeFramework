@@ -26,7 +26,7 @@ namespace CSWeFramework.Web.App_Start
         /// </summary>
         public static IUnityContainer GetConfiguredContainer()
         {
-            RegisterTypes(ServiceContainer.Current);
+            //RegisterTypes(ServiceContainer.Current);
             return ServiceContainer.Current;
         }
         #endregion
