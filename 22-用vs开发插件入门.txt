@@ -1,0 +1,114 @@
+开发插件必须在安装vs的时候勾选扩展vs插件的安装包
+几种安装扩展vs插件的安装的方式：
+1.装vs时、弹出界面有一个选项 Visual Studio扩展工具选项，勾选即可
+   如果没有勾选也没关系，以后开发的时候可以再选、如果安装了，在
+   文件--新建项目--有一个扩展（Extensibility）--会发现几个模板
+2.控制面板--程序--卸载程序--搜索vs--右键更改--重新选择vs的一些sdk工具，安装上去即可
+
+vs开发插件的方式有两种：
+1、 .MSI 
+2、.Vsix(简单，灵活。微软推荐)
+学习资料：
+提供了很多插件开发事例。可以自己学习
+https://github.com/Microsoft/VSSDK-Extensibility-Samples
+
+入门：
+开发vs插件，需要掌控vs，
+拿到vs这个对象（List） DTE
+vs插件的依赖注入容器 
+var s=ServiceProvider GetService(type(I解决方案));//类似于unity容器中获取car接口  GetService(typeof(ICarService))
+DTE2 dte=(DTE2)ServiceProvider.GetService(type(DTE));//从容器中拿到DTE
+dte====>VS  //dte就相当于获取到了vs插件核心对象
+dte.解决方案
+dte.菜单
+dte.工具条
+dte.窗口
+dte.....
+
+新建项目--开始开发插件
+1.新建vs解决方案  名字为：ExtensibilitySamples
+2.新建c#项模板
+   a.添加--新建项目--扩展性--C# Item Template（c#项模板）--命名：ItemTemplateSample
+   b.创建完后会发现有模板说明。自己点进去看说明研究
+   c.生成解决方案，找到模板bin--debug--ItemTemplateSample文件夹，--复制--粘贴到
+      ---此电脑--文档---vsisual studio 2017--Templates---ItemTemplates--VisualC#--粘贴进去
+   d.粘贴完成后测试下--添加--新建项--就会找到刚才咱们自己创建的c#项模板
+   e.需求：
+         1.公司项目需要有版权描述（作者、时间、描述、版权）就可以通过此插件做到，
+         2.微软自己在新建类 class 前没有加public，可以在模板中加上，以后创建类就会默认有public
+         3.重新生成。拷贝到之前的项模板中就会生效 、再次创建类，会发现上面加的描述、 public都会生成
+         4.还可以在项模板中修改自己的图标（icon)写一些自己的名字、描述等等
+   f.除了项模板，也有项目模板
+
+3.新建c#项目模板
+   a.添加--新建项目--扩展性--C# Project Template（c#项目模板）--命名：ProjectTemplateSample
+   b.可以加一些自己的东西、生成后，同样的操作、复制、粘贴到 -此电脑--文档---vsisual studio 2017--Templates--ProjectTemplates
+   c.微软就是通过这种方式做的插件，比如在项目模板下创建 Controller、View、Model文件夹
+      然后在ProjectTemplate.csproj下需要包含创建的这些文件夹、具体操作找到 ItemGroup节点
+      此节点对应的是包含Class1.cs的节点
+   d.项目建完、导出一个模板
+   e.新建一个testLib类库、新建一些类 比如 StringUtil、TableUtil 然后导出模板。
+      文件---导出模板---项目模板---模板说明--等等--然后输出位置复制下来---保存，就导出来了
+      ---然后剪切此模板，---放入新建项目模板的位置（并行）
+   f.新建项目---会发现testlib类库
+
+4.新建项目、项模板有两种方式，
+  第一种：就是上面（2，3的演示方式）、通过自己新建项目、项模板的方式，生成、找到debug文件夹下的模板文件夹，
+              然后粘贴到对应模板位置即可、
+  第二种：就是项目中的某些类、类库通过导出的方式、到处完成后剪切到对应模板位置也可以
+  一般在项目中一些通用的东西比较多，就可以使用以上两种方式进行快速搭建项目
+
+
+5.VSIX Project
+ 相当于一个容器，容器装的非常多。装插件、菜单的插件、窗口的插件、等等所有的插件都可以装进去
+ 用户安装这个 vsix project 就可以有容器中的所有插件
+5.1新建 VSIXProject  命名为：VSIXProjectSample容器--设置启动项--可以启动调试，上面 项目、项不可以调试
+     打开
+     a.元数据可以修改一些东西 说明等等
+     b.安装目标 --编辑--选择社区版（Community），社区版是最小版本，选择了社区版、专业版、企业版都可以装，如果选择了企业版，其他两个版本的vs就不可以装。
+        版本范围：会发现[14.0]  ，找到vs安装目录会发现有11.0.、12.0、14.0
+        方括号：包括，左边方括号表示：大于等于
+         [14.0,15.0] ：意思就是可以在vs2015、2016上运行 如果需要在vs2010--vs2016版本安装 则区间为：[9.0,15.0]
+        9.0 ---vs2010
+        11.0---vs2012
+        12.0---vs2013
+        14.0---vs2015
+     c.资产：新建加入以上创建的项目、项模板--保存
+     d.依赖项：版本选型
+     生成项目---在bin--debug会发现一个 VSIXProjuectSample，
+     e.安装此容器、安装后会自动将这个插件拷贝到文档模板路径下。也就是上面创建项目、项模板的路径（此电脑--文档---vsisual studio 2017--Templates）
+     f.也可以不用安装此容器，也能够使用，
+       步骤：在电脑左下角搜索%AppData% --点击确定进入此文件夹--然后进入---Local---Microsoft---VisualStudio---14.0Exp--Extensions--stacks--1.0
+                 将容器解压后的文件放入1.0文件夹下即可使用
+
+以上讲的就是插件的开发。容器的部署方式
+5.2 在此容器上新建--Extensibility--会发现有很多选项，
+5.3 在选项中新建一个命令菜单  CustomCommand  命名为FirstMenuCommand【就是在vs上新建、展示一个菜单】
+     a.在资产中会发现自动将命令菜单添加到资产中了
+     b.新建命令菜单后会有一个 FirstMenuCommandPackage.cs 包继承自微软的Package类
+     理清思路：
+        包---->多菜单、工具条、窗口、通过包呈现的东西
+        包下面-->菜单集--->菜单
+        包也有Id   Package_GUID   ----->(菜单集)CommandSetGuid------菜单ID(int)
+        包类中有一个初始化
+    FirstMenuCommand.cs类讲解：
+         里面有一些针对此菜单的一些初始化，在用户点击此菜单触发某些事件，比如弹出一个计算器
+    FirstMenuCommandPackage.vsct讲解：
+         配置一些按钮、组的数据、比如按钮名字、组放在vs菜单项的哪个菜单选项下等等、
+    初始化、配置完成后启动容器会发现工具组下有一个计算器的菜单名字，点击计算器就会弹出系统中的计算器
+    那么也可以将计算器菜单不放在工具组下，放在其他组下，那么就需要在FirstMenuCommandPackage.vsct
+    中配置
+     a.找到Groups组集合 组集合下有组的编号、那么如何挂在其他组下，知道组的编号呢？
+     b.msdn.microsoft.com/en-us/library/cc826118.aspx  [https://docs.microsoft.com/zh-cn/visualstudio/extensibility/internals/guids-and-ids-of-visual-studio-menus?view=vs-2015]
+     c.就会找到组的id
+     d.比如放在项目下-复制项目id粘贴进去即可
+     e.新建一个项目，比如控制台、就会发现在项目下有计算器菜单了
+     f.注意：替换某个组集合下的菜单id，就找到这个id去网上（b.网址）找到个id的属于菜单还是组。在对应的组/菜单下找到生成到其他菜单组下的id
+     g.决定将菜单到底挂在哪个位置 如果找不到菜单的guid，如何快速找到对应菜单的guid呢？http://www.cnblogs.com/lswweb/p/4281167.html 按照此方法即可
+     h.
+     
+                
+
+      
+  
+
