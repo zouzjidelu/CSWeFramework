@@ -48,9 +48,11 @@ dte.....
       此节点对应的是包含Class1.cs的节点
    d.项目建完、导出一个模板
    e.新建一个testLib类库、新建一些类 比如 StringUtil、TableUtil 然后导出模板。
-      文件---导出模板---项目模板---模板说明--等等--然后输出位置复制下来---保存，就导出来了
-      ---然后剪切此模板，---放入新建项目模板的位置（并行）
-   f.新建项目---会发现testlib类库
+      文件---导出模板---项目模板---模板说明--等等--然后输出位置复制下来---保存，就导出来了（PS：以上导出模板的路径是vs2015一下的，vs2017在 项目---导出模板）
+
+      ---然后剪切此模板，---放入新建项目模板的位置---此电脑--文档---vsisual studio 2017--Templates---ProjectTemplates--VisualC#（并行）
+   f.新建项目---会发现testlib类库--然后新建这个项目模板，就会发现在testlib类库下的创建的类、文件夹都会显示出来
+   g.同理，导出项模板也是一样，的步骤。导出模板--项模板--选择要导出的项---勾选此项中包含的引用
 
 4.新建项目、项模板有两种方式，
   第一种：就是上面（2，3的演示方式）、通过自己新建项目、项模板的方式，生成、找到debug文件夹下的模板文件夹，
@@ -73,9 +75,9 @@ dte.....
         11.0---vs2012
         12.0---vs2013
         14.0---vs2015
-     c.资产：新建加入以上创建的项目、项模板--保存
+     c.资产：新建加入创建项目、项模板--保存
      d.依赖项：版本选型
-     生成项目---在bin--debug会发现一个 VSIXProjuectSample，
+     生成项目---在bin--debug会发现一个 VSIXProjuectSample.vsix，以vsix结尾的文件并不陌生，微软的插件都是这个后缀
      e.安装此容器、安装后会自动将这个插件拷贝到文档模板路径下。也就是上面创建项目、项模板的路径（此电脑--文档---vsisual studio 2017--Templates）
      f.也可以不用安装此容器，也能够使用，
        步骤：在电脑左下角搜索%AppData% --点击确定进入此文件夹--然后进入---Local---Microsoft---VisualStudio---14.0Exp--Extensions--stacks--1.0
@@ -95,6 +97,9 @@ dte.....
          里面有一些针对此菜单的一些初始化，在用户点击此菜单触发某些事件，比如弹出一个计算器
     FirstMenuCommandPackage.vsct讲解：
          配置一些按钮、组的数据、比如按钮名字、组放在vs菜单项的哪个菜单选项下等等、
+         具体配置：.vsct后缀的文件打开
+           1.找到<buttons>---><button>---><buttontext>更改名称
+           2.放在某个组<groups>下？默认放在了工具菜单组下。具体请看<groups>----><group>----><Parent>节点的id就是对应的组id，IDM_VS_MENU_TOOLS代表工具组
     初始化、配置完成后启动容器会发现工具组下有一个计算器的菜单名字，点击计算器就会弹出系统中的计算器
     那么也可以将计算器菜单不放在工具组下，放在其他组下，那么就需要在FirstMenuCommandPackage.vsct
     中配置
@@ -104,8 +109,63 @@ dte.....
      d.比如放在项目下-复制项目id粘贴进去即可
      e.新建一个项目，比如控制台、就会发现在项目下有计算器菜单了
      f.注意：替换某个组集合下的菜单id，就找到这个id去网上（b.网址）找到个id的属于菜单还是组。在对应的组/菜单下找到生成到其他菜单组下的id
-     g.决定将菜单到底挂在哪个位置 如果找不到菜单的guid，如何快速找到对应菜单的guid呢？http://www.cnblogs.com/lswweb/p/4281167.html 按照此方法即可
-     h.
+     g.决定将自定义菜单到底挂在哪个位置 如果找不到菜单的guid，如何快速找到对应菜单的guid呢？http://www.cnblogs.com/lswweb/p/4281167.html 按照此方法即可
+        根据提供的连接内容提示，vs2017的版本是15.5
+        具体操作步骤
+	1：页面创建一个txt，打开--粘贴一下内容
+ 		Windows Registry Editor Version 5.00
+		[HKEY_CURRENT_USER\Software\Microsoft\VisualStudio\15.5\General]
+		"EnableVSIPLogging"=dword:00000001
+	2.内容中有一个15.5，这里指的是vs2017，如果是vs2015，应该填写14.0
+ 	3.保存，将后缀改为reg，并双击运行，一路点击是即可完成注册表中注册
+	4.重启vs，在你需要知道的菜单中 Ctrl+Shift 点击左键，会弹出关于菜单元数据的信息。按照信息
+	  在FirstMenuCommandPackage.vsct中进行修改，需要将自定义菜单放入某个菜单下数据配置
+	5.我的做法步骤是：
+		a.找到Symbols节点下的 任意一个 GuidSymbol节点，复制一份 修改复制的内容
+		b.具体内容：	
+    		<GuidSymbol name="guidCustomMenuCommandPackageCmdSet" value="{C0D88179-5D25-4982-BFE6-EC5FD59AC103}">
+      			<IDSymbol name="CustomMenuCommandId" value="256" />
+    		</GuidSymbol>
+		c.name属性中的值是随意写的， <GuidSymbol 的value对应的是元数据信息中的guid
+		   <IDSymbol 的value对应的是元数据中的cmdid
+		d.找到Groups节点下的Group节点，复制节点下的Parent节点，将之前的Parent节点注释掉
+		   然后guid属性对应的是GuidSymbol 节点的name ，id属性对应的是<IDSymbol 节点的name
+		e.以上的配置是，是将自定义的菜单按钮，放到了工具NugGet包管理器组下
+		f.生成项目运行，工具--NugGet管理器--会找到常帅自定义的计算器按钮
+5.4是否可以将菜单挂在与vs平级的菜单下呢？比如文件、编辑、视图、项目、与这些菜单评级呢？
+具体操作步骤：
+1.创建命令菜单  TwoMenuCommand
+2.更改 FirstMenuCommandPackage.vsct配置内容，
+具体看代码 Start  End节点的配置内容
+ <!-- TwoMenuCommandPackage Config Start -->
+ <!-- TwoMenuCommandPackage Config End -->
+
+ <!-- guidTwoMenuCommandPackage Commands Config Start -->
+ <!-- guidTwoMenuCommandPackage Commands Config End -->
+
+
+PS：与之前FirstMenuCommand菜单不同是，多了一个TopLevelMenu  顶级菜单的配置
+ 具体配置关系是【可以看5.3包关系理清思路处】
+包-->菜单集合（CmdSt）-->菜单（guid）
+以现在配置的顶级菜单为例子：
+
+包（guidTwoMenuCommandPackage）-->菜单集合（guidTwoMenuCommandPackageCmdSet）-->菜单（TopLevelMenu）-->可以划分三个关系
+顶级菜单下---有菜单组---菜单组下有菜单  
+
+在配置Menus菜单时，注意，你需要将自己配置的顶级菜单，放到哪个包的后面呢？如何配置？
+就是在Menu节点下的Parent节点中的id指向的就是要放入在哪个包的后边
+以上配置完成后，运行起来会在vs菜单栏中有一个帅【顶级菜单】-帅下有一个组--组中有一个测试菜单按钮
+KeyBindings 节点是针对菜单，设置快捷键的
+
+以上的配置关系都是 包--菜单集 --菜单集下分很多组--组下有很多菜单按钮
+以上主要配置了一个计算器菜单按钮，
+1.默认是放入到工具包下的组中
+2.通过自己修改，放入到了工具包---nuget管理包组下的菜单列表中
+3.自定义创建一个顶级菜单包，包下放入一个菜单按钮，（菜单按钮属于一个菜单组，菜单组是默认分配的MyMenuGroup）
+
+
+
+
      
                 
 

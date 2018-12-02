@@ -1,0 +1,13 @@
+  <Menus>
+      <Menu guid="guidTestCommandPackageCmdSet" id="TopLevelMenu" type="Menu" priority="0x700">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_PROJECT"/>
+        <Strings>
+          <ButtonText>常帅(&amp;Q)</ButtonText>
+          <CommandName>常帅(&amp;Q)</CommandName>
+        </Strings>
+      </Menu>
+    </Menus>
+补充：
+在上一节，配置顶级菜单时menus--menu--strings-commadnName节点中加上(&amp;Q)，可以在菜单列表中，通过alt键，+Q，可以快速的定位菜单目录下
+（&amp;)代表的是&，而&在xml中是一个关键字，所以。用&amp;来代替
+
