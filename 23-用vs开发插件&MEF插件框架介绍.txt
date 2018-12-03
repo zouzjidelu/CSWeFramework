@@ -1,4 +1,4 @@
-    <Menus>
+﻿    <Menus>
       <Menu guid="guidTestCommandPackageCmdSet" id="TopLevelMenu" type="Menu" priority="0x700">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_PROJECT"/>
         <Strings>
@@ -15,4 +15,103 @@
 一、工具栏
 1.创建VSIX容器【IDEToolbar】---容器内创建命令菜单[ToolbarTest]---找到vsct后缀的文件。找到menus节点下的menu节点的type属性，
   上节讲的是添加一个菜单项。故type=“menu”，今天讲的是工具栏，故type="Toolbar",具体代码配置，请看22期上传的代码示例。照着写就ok，没技术含    量，生成项目，会发现默认生成插件的存储路径文件夹中会有一个IDEToolbar
+2.生成运行后，会发现工具栏列表中没有显示自己定义的工具栏，需要在工具栏出右键选择，找到自己定义的工具栏打沟，即可看到，点击即可弹出信息
+二、解决方案资源管理器添加一个菜单
+三、自定义工具窗口
+1.同样创建一个VSIX容器,然后添加项，选择Custom Tool Window,命名为FirstWindow
+2.会发现一个wpf的窗口
+3.创建一个命令，命名为：ToolWindowCommand【有了窗口肯定需要有命令，弹出窗口】，命令在窗口下执行，默认放在
+  视图----其他窗口下---自己的命令菜单，然后点击菜单，弹出信息
+四、编译器的Margin扩展
+1.创建容器 【marginExtension】
+2.新建项，选择Editor Margin  
+3.Factory配置一些信息，  
+
+五、编译器扩展 Editor Text Adornment {在编译器内动态扩展一些信息] 针对编辑器文本内容修饰
+1.创建容器TestAdornment
+2.创建编辑器扩展textAdorment1
+   a.会出现两个类，第一个类是文本修饰器类
+
+六、编辑器静态扩展
+1.创建容器
+2.创建修饰器 EditorClassFiler   
+3.输入文字，背景变紫色
+
+七、容器打包
+1.在自己开发了很多插件后，都会生成一个vsix的后缀安装包，不可能把每个都给用户去安装
+2.新建一个容器，在资产中把开发的所有容器都加入进来，都加入到vsPackage中，然后生成后
+  会发现debug文件夹中会有一个 vsix，把这个vsix插件给用户安装就可以了
+
+八、代码段扩展
+1.工具---代码片段管理器---Csharp--Visual C# ---微软自己开发的代码段
+2.新建项---选择扩展中的Snippet File项，命名为Pager[table键，自动将分页代码实现]
+3.实际上snippet中是xml
+   打开后分为头部，和片段两部分
+头部：提示信息的配置
+片段：变量的定义，【变量的定义，提示、描述】
+代码片段：
+<Code Language="CSsharp">
+<![CDATA[@Html.Pager($listname$,10,0,$listname$)]]>
+</Code>
+
+九、vs插件机制
+1.mef插件系统，在vsix容器中的资产中就有mef插件
+2.mef不是ef  
+MEF  Managed Extensiblity Framework[托管可扩展框架]，可在vb。c#中使用 .netFramework 4.0出现的
+  （管理多个插件【一个接口，多个实现，这些实现都要用，支付宝，微信，财付通，，，，】）
+unity ioc 依赖注入（管理关系，可替换性，今天业务A，明天业务B）
+
+MAF   Managed Add-in Framework[托管附加程序框架]微软经常用的插件框架 ，参阅微软文档进行学习  .net framework 3.5出现的
+
+3.创建一个控制台程序 MefSample
+a.添加引用 sytem.com.... mef组建模型，mef包括在其中
+关系图：容器有----多个插件，插件之间有可能有依赖关系， dll---实现接口，
+b.理解对象
+ImportAttribute [导入]
+ExprotAttribute  [导出]
+CompositionContainer[容器]
+DirectoryCatalog[文件夹] [目录]//目录分为很多中，程序集目录，文件夹目录
+文件夹下有和多个dll， dll标记为导入||导出 
+4.新建一个类库 AlipayPay
+   a.引用PayCore类库
+   b.创建一个支付宝支付类【AlipayPayment】，并且实现IPayment接口
+   c.   在类上加入导出标签 [Export]
+5.新建一个类库 WechartPay
+   a.引用PayCore类库
+   b.创建一个微信支付支付类[WechartPayment]，并且实现IPayment接口
+   c.   在类上加入导出标签 [Export]
+
+6,新建一个类库 PayCore[主要放接口的]
+   a.定义一个抽象类 IPayment [不管支付宝、微信接口都用这个]，有一个功能 string Pay(decimal momory);
+   b.在抽象类 上打一个导出标签[Export],为什么要导出？别人要用的东西，需要导出，就类似我们之前开发的插件，需要导出，安装才可以用
+      需要引用sytem.com... dll  mef组件模型
+
+7.在主程序中 【MefSample控制台程序】
+a.在控制台程序debug下创建一个plugins【插件】文件夹，
+  把支付宝、微信插件，放入插件文件夹中
+b.主程序不需要引用具体实现，只需要引用接口，接口是稳定的，抽象的
+c. 创建支付管理类 PayManager ,写一个属性 
+[ImportMany] //导入多种,导入一个就是[Import]
+public Ienumerable<Ipayment> Payments{get;set;}//因为有多个支付方式所以使用Ienumerable
+
+首先找到程序域目录  string dir=AppDom.CurrentDomain.BaseDirectory;
+dir=Path.Combine(dir,"Plugins");
+
+var sumCatalog=new AggregateCatalog();
+sumCatalog.Catalogs.Add(catalog);
+sumCatalog.Catalogs.Add(new AssemblyCatalog(typeof(Ipayment).Assembly));
+
+DirectoryCatalog cagalog=new DirectoryCatalog(dir);
+//组合一个容器
+CompositionContalner container=new compositionContainer(catalog);//在程序启动中执行，在web项目中就放在glob中
+PayManager payManager=new p奥运Manager（）；
+container.ComposeParts(paymanager);//组合
+//组合完成，可以使用支付方式
+foreach(var pay payManager.Payments){
+string result=pay.Pay(300);
+console.writeline(result);
+}
+
+
+
 
