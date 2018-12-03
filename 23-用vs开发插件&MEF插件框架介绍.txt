@@ -1,13 +1,18 @@
-  <Menus>
+    <Menus>
       <Menu guid="guidTestCommandPackageCmdSet" id="TopLevelMenu" type="Menu" priority="0x700">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_PROJECT"/>
         <Strings>
-          <ButtonText>��˧(&amp;Q)</ButtonText>
-          <CommandName>��˧(&amp;Q)</CommandName>
+          <ButtonText>常帅(&amp;Q)</ButtonText>
+          <CommandName>常帅(&amp;Q)</CommandName>
         </Strings>
       </Menu>
     </Menus>
-���䣺
-����һ�ڣ����ö����˵�ʱmenus--menu--strings-commadnName�ڵ��м���(&amp;Q)�������ڲ˵��б��У�ͨ��alt����+Q�����Կ��ٵĶ�λ�˵�Ŀ¼��
-��&amp;)��������&����&��xml����һ���ؼ��֣����ԡ���&amp;������
+补充：
+在上一节，配置顶级菜单时menus--menu--strings-commadnName节点中加上(&amp;Q)，可以在菜单列表中，通过alt键，+Q，可以快速的定位菜单目录下，
+（&amp;)代表的是&，而&在xml中是一个关键字，所以。用&amp;来代替
+
+
+一、工具栏
+1.创建VSIX容器【IDEToolbar】---容器内创建命令菜单[ToolbarTest]---找到vsct后缀的文件。找到menus节点下的menu节点的type属性，
+  上节讲的是添加一个菜单项。故type=“menu”，今天讲的是工具栏，故type="Toolbar",具体代码配置，请看22期上传的代码示例。照着写就ok，没技术含    量，生成项目，会发现默认生成插件的存储路径文件夹中会有一个IDEToolbar
 
