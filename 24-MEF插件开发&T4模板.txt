@@ -1,0 +1,150 @@
+﻿MEF开发插件过程
+1.主程序【Visual Studio】---插件放入目录中，vs启动时，会注入到vs中，
+  比如之前开发的vs菜单，vs部署之后，vs中就出现了一个菜单，这就是插件的好处，不用去
+  改vs，灵活定制vs，需要个性化需求，就可以通过插件来实现，在net项目中部署最小文件是dll，动态加载库，
+  最原始开发插件就是在c#中的反射机制，在内存中加载dll。就可以用这些插件，插件定义是有前提的，
+  假如 vs和目录，目录中存放vs 的插件 ，M(团队)、T（工具）、E(编辑) 、 p接口，实现了p接口，注册到M(团队)、T（工具）、E(编辑) 
+  MTE代表的就是vs的菜单类型，放到哪个菜单目录下，p就是接口，谁实现了p，就是实现的一个的插件
+一、通过反射的方式做到，控制台程序提供一个说话的功能，提供一个插件文件夹，开发英文、中文、俄语的方式说你好
+     不用修改主程序，而是通过插件的方式去做。
+
+1.新建解决方案【HelloWorldSamples】
+2.添加项目，控制台应用程序【ConsoleSample】（相当于主程序，vs本身）
+  主程序做世界各国语言问候
+3.新建接口类库【Plugin】插件
+   a.新建接口【IPlugin】，抽象，接口具体是语言描述，各国实现该接口，实现各国的语言问候方式
+   b.创建一个功能说话，招呼的功能 string HelloWord();
+4.新建类库【Plugin.China】中国人说话的方式
+   a.新建类【ChinaHelloWord】、实现插件接口
+5.主程序内，通过反射，找到实现插件接口的插件实例的方法
+  statci void Main(string [] args){
+Ienumrable<type>pluginTypes=GetPluginTypes();
+foreach(Type plugintype in pluginTypes)
+{
+   Iplugin plugin=(IPlugin)Activator.CreateInstance(plugintype);
+ console.writeline(plugin.HelloWorld());
+}
+   public Ienumerable<Type> GetPluginTypes(){
+   string binDir=AppDomain.CurrentDomain.BaseDirectory;
+   string pluginDir=Path.Combine(binDir,"Plugins");
+   //文件夹下找到所有的文件，找什么样的文件？*.dll,并在顶级目录搜索
+   string [] dllFiles=Directory.GetFiles(pluginDir,"*.dll",SearchOption.TopDirctoryOnly);
+   //遍历dll
+   //加载dll的所有类型【有些类没有实现插件接口的】
+   //遍历所有类型，筛选一下，实现插件接口的类
+   //首先类型必须是一个Class,并且实现了这个插件接口，typeof(Iplugin).isAssignableFrom(type);代表是实现该接口的类型
+   // yledl return type; 返回此类型
+  }
+
+6.新建类库【说英文的插件】Plugin.English
+a.引用接口类库
+b.添加类，说英文的问候功能  SayEnHelloWord
+c.实现接口的功能，说英文的问候
+d.这里可以扩展其他国家语言的问候插件，
+
+7.接口分为很多中，比如vs 的插件接口，有工具、编辑、视图、等等菜单接口
+
+二、MEF 微软可扩展框架
+1.mef不是ef，mef是插件开发框架，ef是数据访问orm框架
+mef之前是开源的，后边发现mef非常重要，又直接集群到 .net framework 4.0当中
+vs也是使用mef进行插件框架的基础
+什么是mef？
+vs、插件文件夹，
+插件文件夹导入vs，vs有容器，容器就是mef，vs定义很多接口，工具、编辑、视图接口，
+插件依赖vs的接口，接口稳定，抽象的，
+导入vs当中，自动匹配vs定义的接口，匹配到了，就绑定到对应的接口中，比如实现工具接口，就会将插件绑定到工具菜单下
+
+
+首先要有一个目录（文件夹或者多个）---》构建一个mef容器（加载目录下的所有dll）---》
+mef帮我们匹配接口与插件之间的实现关系---》调用插件
+
+三、mef实例讲解
+1.根据上面的关系开始写一个事例，网站中用到支付功能，支付分为很多种，
+  微信、支付宝、银联，用户进入支付页面可以选择支付方式，动态选择支付，进行支付，大概是这么一个过程
+2.创建解决方案【CarManager】
+3.创建一个web网站【CarManager.Web】,选择mvc
+4.创建一个core类库，提供插件抽象的，是一个公用的类库
+   a.新建文件夹，保存插件的，【Plugins】，目录下很多插件
+   b.新建一个 IPlugin接口，插件有安装【Install】，卸载方法【Uninstall】、插件有描述、版本、作者，有一个接口描述属性，只能获取，不能赋值的属性
+   c.新建一个类，插件信息类【PluginDescriptorAttribute】，这个类比较特殊，可以当作标记打在类上
+      I:有名字(PluginName)、版本(PluginVersion)、作者(Author)属性、
+      II:通过构造函数初始化
+      III:继承Attribute类，打标记类，不能搭载任何地方，所以需要有约束，约束必须是一个类，不允许一个类打多次，不允许被继承
+   d.创建一个BasePlugin类，插件、描述类默认实现，，实现插件接口IPlugin
+      插件描述属性默认实现
+   e.创建一个抽象类，支付方式的插件类，实现BasePlugin
+     I:支付谁实现，不知道,所以是抽象的功能 public abstract bool Payment(double amount)
+     II:为用户提供一个默认实现，
+5.新建一个支付宝支付插件类库【CarManager.Plugin.Alipay】
+a.创建alipayment类，继承paymentPlugin,实现抽象类的支付方式
+b.希望将支付类打一个标签，PluginDesciptor("支付宝支付","1.0")
+c.引用mef组件模型，system.componenModel.Composition
+d。在alipayment类上加入导出标签[Export(typeof(PaymentPlugin))]、导出支付插件
+
+6.web项目，创建paymentController
+a.在控制器中使用支付插件
+  //导入支付插件
+  [Importmany]
+  public Ienumerable<PaymentPlugin> Plugins{get;set;}
+
+b.在主程序中新建一个插件目录，Plugins
+  找到插件目录
+string dir=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Plugins")；
+c.在mef中目录如何表示？
+  DirectoryCatalog catalog=new DirectoryCatalog(dir); 
+  //目录构建好，需要将目录插件导入容器中【mef容器】
+  CompositionContainer container=new ...(catalog);
+  //将容器内插件进行匹配、组合
+  Container.ComposeParts(this);//this代表当前导入的插件
+
+d.创建一个action、将插件传出去、创建一个视图、文本框，支付插件显示、，提交支付、
+在提交的支付方法中，进行调用用户选择的支付方式的功能
+
+
+再通过同样的方式创建一个微信支付的插件
+，然后再也选择支付方式进行支付
+
+总结：如何完整一整套
+导出：插件
+主程序用，需要导入插件，，插件是个抽象的，具体的插件不知道
+导入插件到mef中，进行自动匹配，组合
+
+四、T4模板
+概念：
+陶瓷磨具，需要材料，水、土、傻、等等，，导入模板，制造一个碗、杯子等等
+模板，针对通用的、，
+微软提供了模板、文本文档模板、运行时文本模板
+
+1.创建一个文本模板(xxxx.tt)，会发现一些指令
+以这个格式开始结束<#@ #>
+通过t4模板写一些东西
+指令<#  内容 #>
+
+<#
+pucblic className="MyClass"; 
+string [] properys =new string []{"Name","Age","Sex"};
+#>
+public  class <#=className #>  //<#=#>代表用什么来替换
+{
+<# foreach(string p in properys) { #>
+   public int <#=p#>{get;set;}
+}
+
+}#>
+
+解决方案生成、生成转换所有t4模板
+在解决方案生成，生成t4模板
+
+2.创建一个运行时模板
+运行时模板生成一个类，在运行时调用模板内容
+
+在main函数中
+创建运行时模板对象
+RuntimeTextTemplate1 t=new ....();
+string str=t.TransformText();
+
+下节课，讲解怎么在运行时模板中传递参数等、、、
+
+
+
+
