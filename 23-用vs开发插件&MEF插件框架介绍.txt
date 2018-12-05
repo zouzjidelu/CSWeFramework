@@ -13,28 +13,52 @@
 
 
 一、工具栏
+
 1.创建VSIX容器【IDEToolbar】---容器内创建命令菜单[ToolbarTest]---找到vsct后缀的文件。找到menus节点下的menu节点的type属性，
   上节讲的是添加一个菜单项。故type=“menu”，今天讲的是工具栏，故type="Toolbar",具体代码配置，请看22期上传的代码示例。照着写就ok，没技术含    量，生成项目，会发现默认生成插件的存储路径文件夹中会有一个IDEToolbar
 2.生成运行后，会发现工具栏列表中没有显示自己定义的工具栏，需要在工具栏出右键选择，找到自己定义的工具栏打沟，即可看到，点击即可弹出信息
-二、解决方案资源管理器添加一个菜单
+
+二、解决方案资源管理器添加一个命令菜单
+1.创建Vsix容器【SolutionToolbar】解决方案工具容器
+2.添加命令 ToolbarButtonCommand  工具栏按钮命令菜单
+        <IDSymbol name="ToolbarButtonGroup" value="0x0200" />
+3.在vsct后缀的类中添加一个 ToolbarButtonGroup 组。将组挂在解决方案资源管理器下【IDM_VS_TOOL_PROJWIN】
+  <Group guid="guidToolbarButtonCommandPackageCmdSet" id="ToolbarButtonGroup" priority="0x0200">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_TOOL_PROJWIN"/>
+      </Group>
+
+4.将按钮挂在 ToolbarButtonGroup组下
+   <Parent guid="guidToolbarButtonCommandPackageCmdSet" id="ToolbarButtonGroup" />
+
 三、自定义工具窗口
-1.同样创建一个VSIX容器,然后添加项，选择Custom Tool Window,命名为FirstWindow
-2.会发现一个wpf的窗口
-3.创建一个命令，命名为：ToolWindowCommand【有了窗口肯定需要有命令，弹出窗口】，命令在窗口下执行，默认放在
+1.同样创建一个VSIX容器,FirstWindow
+2.然后添加项，选择Custom Tool Window,命名为ToolWindow1 ，会发现一个wpf的窗口、命令类【ToolWindow1Command】 
+ 【有了窗口肯定需要有命令，弹出窗口】，命令在窗口下执行，默认放在
   视图----其他窗口下---自己的命令菜单，然后点击菜单，弹出信息
+3.运行项目如果报错，请看这个链接 解决方案 https://social.msdn.microsoft.com/Forums/office/zh-CN/bf389d55-3c6c-43e6-85b7-00fe5277df8c/vs2015-vsix-26080278613253435793260322431430340-custom-tool-window-39033?forum=vstudiozhchs
+换一个png图片就可以了
+4.运行项目---选择视图----其他窗口-----ToolWindow1---clickme---弹出信息
+5.这里所用到的是wpf技术，可以学习一下wpf，给界面做的更好看。功能更完善。命令窗口。
+  有了此自定义工具窗口，可以想象更多功能，比如打开vs，点击窗口。获取当前自己的任务，任务完成。点击任务完成。等功能。。任务数据是另外一个系统做的，可以关联起来
+
 四、编译器的Margin扩展
 1.创建容器 【marginExtension】
-2.新建项，选择Editor Margin  
+2.新建项，选择Editor Margin   【EditorMargin1.cs】
 3.Factory配置一些信息，  
+4.EditorMargin1类中配置一些lable，button等控件，会在编辑器边缘底部展示lable。button，目前我
+  想到的功能就是，公司发布一些重要的通知。可以在这里轮循显示重要 通知。不过需要有wpf开发就经验
 
-五、编译器扩展 Editor Text Adornment {在编译器内动态扩展一些信息] 针对编辑器文本内容修饰
+
+五、编译器动态扩展 Editor Text Adornment {在编译器内动态扩展一些信息] 针对编辑器文本内容修饰
 1.创建容器TestAdornment
 2.创建编辑器扩展textAdorment1
-   a.会出现两个类，第一个类是文本修饰器类
+3.代码大概意思就是。创建一个画布。和画笔，定义一个onchang事件，当用户输入字符，事件中循环文本视图编辑器，循环，每一行。
+找到匹配的字符，比如‘a’，就会对a进行添加背景颜色，以及添加边框。
+
 
 六、编辑器静态扩展
-1.创建容器
-2.创建修饰器 EditorClassFiler   
+1.创建容器【TestEditorClassFiler 】
+2.创建修饰器 EditorClassifier1.cs
 3.输入文字，背景变紫色
 
 七、容器打包
@@ -44,7 +68,8 @@
 
 八、代码段扩展
 1.工具---代码片段管理器---Csharp--Visual C# ---微软自己开发的代码段
-2.新建项---选择扩展中的Snippet File项，命名为Pager[table键，自动将分页代码实现]
+2.新建容器【CodeSnippetSample】
+3.新建项---选择扩展中的Snippet File项，命名为Pager[table键，自动将分页代码实现]
 3.实际上snippet中是xml
    打开后分为头部，和片段两部分
 头部：提示信息的配置
