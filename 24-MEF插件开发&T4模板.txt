@@ -16,6 +16,7 @@
    b.创建一个功能说话，招呼的功能 string HelloWord();
 4.新建类库【Plugin.China】中国人说话的方式
    a.新建类【ChinaHelloWord】、实现插件接口
+5.在主程序debug文件夹下创建一个插件文件夹【plugins】，将中国人打招呼的类库dll放入进去，
 5.主程序内，通过反射，找到实现插件接口的插件实例的方法
   statci void Main(string [] args){
 Ienumrable<type>pluginTypes=GetPluginTypes();
@@ -62,9 +63,10 @@ mef帮我们匹配接口与插件之间的实现关系---》调用插件
 1.根据上面的关系开始写一个事例，网站中用到支付功能，支付分为很多种，
   微信、支付宝、银联，用户进入支付页面可以选择支付方式，动态选择支付，进行支付，大概是这么一个过程
 2.创建解决方案【CarManager】
+   a.新建解决方案文件夹，保存插件的，【Plugins】，目录下很多插件，比如支付宝、微信等插件
 3.创建一个web网站【CarManager.Web】,选择mvc
 4.创建一个core类库，提供插件抽象的，是一个公用的类库
-   a.新建文件夹，保存插件的，【Plugins】，目录下很多插件
+  
    b.新建一个 IPlugin接口，插件有安装【Install】，卸载方法【Uninstall】、插件有描述、版本、作者，有一个接口描述属性，只能获取，不能赋值的属性
    c.新建一个类，插件信息类【PluginDescriptorAttribute】，这个类比较特殊，可以当作标记打在类上
       I:有名字(PluginName)、版本(PluginVersion)、作者(Author)属性、
@@ -79,11 +81,11 @@ mef帮我们匹配接口与插件之间的实现关系---》调用插件
 a.创建alipayment类，继承paymentPlugin,实现抽象类的支付方式
 b.希望将支付类打一个标签，PluginDesciptor("支付宝支付","1.0")
 c.引用mef组件模型，system.componenModel.Composition
-d。在alipayment类上加入导出标签[Export(typeof(PaymentPlugin))]、导出支付插件
+d。在alipayment类上加入导出标签[Export(typeof(PaymentPlugin))]、导出支付插件【注意不是具体的某个支付插件，而是支付插件】
 
 6.web项目，创建paymentController
 a.在控制器中使用支付插件
-  //导入支付插件
+  //导入支付插件【同样，导入的是支付插件，而不是具体的某个支付插件，都是抽象的，可以进行的扩展各种支付插件】
   [Importmany]
   public Ienumerable<PaymentPlugin> Plugins{get;set;}
 
@@ -108,10 +110,11 @@ d.创建一个action、将插件传出去、创建一个视图、文本框，支
 导出：插件
 主程序用，需要导入插件，，插件是个抽象的，具体的插件不知道
 导入插件到mef中，进行自动匹配，组合
+学习资料：https://blog.csdn.net/a1037949156/article/details/79535129
 
 四、T4模板
 概念：
-陶瓷磨具，需要材料，水、土、傻、等等，，导入模板，制造一个碗、杯子等等
+陶瓷磨具，需要材料，水、土、沙、等等(数据)，，导入磨具(模板)，制造一个碗、杯子等等
 模板，针对通用的、，
 微软提供了模板、文本文档模板、运行时文本模板
 

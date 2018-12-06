@@ -1,0 +1,36 @@
+﻿一、创建mvc项目【MVCTemplateSample项目】
+1.在mvc项目下创建一个文件夹CodeTemplates ,当项目生成后微软会找项目中的这个文件夹，  
+  a.如果有此文件夹：优先使用此文件夹下的模板。【在这一章节mvc+ef搭建框架3.txt，也讲到一部分t4模板的使用】
+  b.如果没有此文件夹： C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\Extensions\Microsoft\Web\Mvc\Scaffolding\Templates、     则使用这个路径下的微软的模板
+2.修改webapi的模板。默认每个控制器创建后默认有一个构造函数。然后创建控制器，发现有默认构造函数
+
+二、视图基架
+3.创建一个UserMOdel类，创建一个User控制器，创建一个视图。视图选择UserModel类，list集合
+  在控制器的方法中传入一个list<UserMOdel>集合，
+  运行代码，发现微软自动做了一个集合列表。等会儿会制定一个自己的模板。样式。分页等加入进去。每次生成列表就会一样的。提高开发效率
+
+4.在CodeTemplates文件夹下的MVCView文件夹下，添加一个t4模板叫 PageList，再次添加视图就会找到PageList模板
+5.也可以将实体类的中某个属性不生成页面类表中，需要在属性上添加一个脚手架属性，设置为false即可【ScaffoldCoIumn(false)】
+  这个是 [Hiden(false)]隐藏属性。在前台生成的是隐藏控件
+
+三、对话框基架
+1.vs找插件--在mef容器中找插件。自己实现接口，放入容器中，
+2.微软的基架在 C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\Extensions\Microsoft\Web\Mvc\Scaffolding
+  下有一个MIcrosoft.aspnet.Scaffolding.MVc.5.0dll
+  将此dll通过反编译工具翻译。，找到一个api的基架。会发现有一个基架工厂，工厂上有一个Export 到处的特性，这个并不陌生，在讲解mef插件时
+  已经讲过，并且有插件mef讲解图。可查看【23-用vs开发插件&MEF插件框架介绍】【24-MEF插件开发&T4模板】两个章节，对mef的介绍，及使用
+  ，反编译后会发现此dll是引用的 MIcrosoft.aspnet.Scaffolding.MVc.5.0dll，那么自己做扩展也是通过继承这个dll。进行扩展自己的t4 插件
+四、新建解决方案【CustomScaffolder】自定义基架
+1.添加类库【CustomScaffolder】自定义脚手架
+  a.引用程序集【EnvDTE】 vs开发插件的核心组件就是此组件
+  b.引用asp.net脚手架. Microsoft.AspNet.Scaffolding.12.0、Microsoft.AspNet.Scaffolding.EntityFramework.12.0
+2.添加类，自定义代码生成类【CustomCodeGenerator】
+  a.引用命名空间 using Microsoft.Asp.Net.Scaffolding
+  b.继承代码生成类：CodeGenerator
+  c.有两个类，第一个是自定义代码生成类，弹出自己的对话框
+  c.构造函数
+3.添加自定义代码生成类工厂【CustomCodeGeneratorFactory】,继承代码生成工厂【CodeGeneratorFactory】
+  自定义一个插件需要导出，使用mef需要引用一个组件system.c.....，然后在类上添加导出标签 Export(typeof(CodeGeneratorFactory))
+  重写工厂方法。将自定义代码生成类返回出去，代码生成器需要一个代码生成说明信息，
+
+ 

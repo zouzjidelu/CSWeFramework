@@ -1,0 +1,49 @@
+﻿在vs中动态 卸载、安装dll，实现热插拔
+
+1.当c#程序启动时候，会生成一个进程。进程分很多区域。
+web会启动会生成3个应用程序域
+winfrom。窗体程序会生成一个程序域。所有dll都在一个程序域
+
+web3个 应用程序域【Appdomain】（bing搜索 web 3ge appdomain，查找资料具体了解）
+
+1.系统程序域【Clr】
+2.共享程序域【核心程序域。system.web,共享数据，静态变量】
+3.默认程序域【自己开发的在这里】
+
+程序域之间通过 引用传值的方法 互相通信
+
+创建一个控制台【控制台只有一个应用程序域】
+启动---调试---模块可以查看程序加载的dll
+
+在c#当中只有装载dll，没有卸载dll。Assembly.Load("");
+为什么没有卸载？因为微软考虑安全问题。对程序域管理dll的性能
+造成影响.，那么如何卸载dll？
+微软提供了，可以创建自己的程序域接口，可以在自己程序域中进行
+加载、卸载dll
+
+1.创建程序域
+var appDomain=AppDomain.CreateDomain("MyAppDomain");
+appDomain.Load("abc.dll");
+AppDomain.Unload(appDomain);
+
+FileSystemWatcher watcher=new FileSystemWatcher("c:\\abc");//监控的文件目录
+watcher.Changed+=Watcher_Cahnged;
+
+文件系统监控器，当目录变化，绑定一个函数。
+
+private static void Watcher_Changed(object sender,,,){
+if(e.ChangeType=WatcherChangeTypes.Deleted){
+  
+}
+}
+
+
+微软为何不推崇创建自己的应用程序域？程序域之间进行通信太耗链接
+。
+而且这种方式很危险，很有可能有人正在用这个dll。你卸载掉了。就会出现安全问题
+如果技术不够厉害，最好不要做。
+======================================T4===========================================
+宿主自己的文本模板host
+vs中使用模板
+容器中使用模板
+
