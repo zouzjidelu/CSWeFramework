@@ -47,3 +47,15 @@ if(e.ChangeType=WatcherChangeTypes.Deleted){
 vs中使用模板
 容器中使用模板
 
+T4模板
+一、新建解决方案 T4TemplateSample
+T4 Host
+1.新建控制台 T4HostSample
+2.新建类 CustomTextTemplatingEngineHost,拷贝微软的文本模板host
+3.tt模板 name="";
+二、新建控制台程序，VsBuildEvent  【生成事件】
+1.右键属性---生成事件--在事件中可以写脚本 
+ 微软出名的脚本 powershell
+
+微软提供了powershell ISE  windows powershell ise
+

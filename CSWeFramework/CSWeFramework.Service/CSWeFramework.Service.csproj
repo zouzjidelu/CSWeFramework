@@ -58,6 +58,9 @@
     <Compile Include="InfrastuctureRegister.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CarServiceRegister.cs" />
+    <Compile Include="Test\ITestService.cs" />
+    <Compile Include="Test\TestService2.cs" />
+    <Compile Include="Test\TestService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CSWeFramework.Core\CSWeFramework.Core.csproj">

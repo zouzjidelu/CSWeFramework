@@ -1,7 +1,8 @@
 ﻿百度搜索 
-1.nfine 快速开发web框架
+快速开发web框架
+1.nfine 
 2.dtcms  菜单导航。历史菜单
-3.adminlte
+3.adminlte 
 学习。net必须知道微软的几个学习网站
 1.www.microsoft.com/net    【 语言框架】
   sdk:开发人员工具包

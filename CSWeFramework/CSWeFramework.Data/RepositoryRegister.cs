@@ -17,9 +17,10 @@ namespace CSWeFramework.Data
         public void RegisterType(IUnityContainer container)
         {
             //数据库上下文注册
-            container.RegisterType<IDbContext, CarDbContext>();
+            //container.RegisterType<IDbContext, CarDbContext>();//通过配置文件的方式注册，并注册为每次请求一个实例
             //仓储注册
-            container.RegisterType(typeof(IRepository<>),typeof(EfRepository<>));
+            container.RegisterType(typeof(IRepository<>), typeof(EfRepository<>));
+
         }
     }
 }

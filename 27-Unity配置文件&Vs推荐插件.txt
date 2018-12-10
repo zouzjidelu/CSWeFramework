@@ -1,0 +1,110 @@
+﻿unity在前面搭建框架系列中，容器使用，通过实现IDependencyRegister接口，在底层注入了服务，如果在其他层替换，硬编码就不够灵活
+那么就可以配置在config文件中
+一、在web项目下新建config文件【Unity.config】
+1.bing 搜索 unity configuration 看官网如何配置unity的关系
+   unity配置节 xmlns,unity命名空间在这个里面，
+
+菜单栏中 xml ---架构---会发现微软提供了很多架构，比如wcf配文件的提示，都是通过xml架构来做到的
+那么untiy也是通过这种方式来做提示
+2.bing   unity  codeplex  输入此网址 https://archive.codeplex.com/?p=unity，直接下载 download archive
+   下载完成后 找到 unity\sourceCode\unity\source路径下的UnityConfiguration30.xsd，拷贝到项目中，
+  【后缀xsd文件,主要用来unity在xml中给与智能提示信息的】
+3.将拷贝到项目中的的UnityConfiguration30.xsd的路径拷贝下来，在vs上找到菜单列表中的 xml--架构--添加，将刚才xsd路径粘贴找到，添加进去，就会有智能提示了
+
+4.在server层创建一个test文件夹，
+  a.创建一个测试的接口 ITestService、ITestService2，创建一个方法  string Test();  string Test()2;
+  b.创建一个测试的servier TestService、TestService2，实现接口 
+在webconfig中
+unity节点下
+创建一个容器节点<Container>
+在容器下创建一个<Register>节点，属性type=“带命名空间下的接口”，mapto=“带命名空间下的实现”
+
+5.将config设置为始终较为复制
+
+6.之前的依赖注入方式也需要支持，现在config的方式也需要支持
+   在untiyConfig配置类中，写一个配置方法
+   public static void Configure(IUnityContainer container){
+   //找到配置文件的path
+   string path= Path.Combine(Appdomain.CurrentDomain.BaseDirectory,"Unity.config");   
+  //配置文件映射
+   var configMap=new ExeConfigurationFileMap{ExConfigFilename=path};
+   var config=ConfigurationManager.OpenMappedExeConfiguration(configMap,ConfigurationUseLevel.None);//映射路径、级别：没有
+   var section=(UnityConfigurationSection)config.GetSection("unity");
+   section.Configure(container);
+
+}
+ //配置先后顺序，先读取配置文件的，在读取IDependencyRegister接口的
+
+7.在控制器中创建一个测试控制器。
+ 
+  a.在构造函数中注入ITestService
+  b.在action中调用服务的方法
+  c.创建一个视图。在视图中绑定
+
+8.在unityconfig中注入泛型类型的
+  <register type="CarManager.Data.IRepository[]" maTo="CarManager.Data.EfRepository[]"
+  []中括号类可以写具体的比如Car
+========================================================================
+微软排行榜排名前20款插件，今天推10款，提高工作效率
+工具----扩展和更新---搜索插件
+一.测试浏览器兼容问题，多浏览器浏览
+   比如有三个浏览器，每次做了兼容处理，都需要依次的去刷新浏览器进行查看兼容问题
+   在网站启动按钮旁边点击下拉菜单，----选择使用以下工具浏览---弹出系统中安装的所有浏览器，
+   按住Ctrl选择需要使用默认的浏览器，比如选择了 谷歌和qq浏览器，然后---选择默认值
+   即可，，启动项目后，会发现同时打开两个浏览器。
+   然后在页面修改任何数据，元素或者样式等等，在启动浏览器旁边有一个【浏览器连接仪表板】刷新，点击刷新，
+  两个浏览的内容就会自动刷新，
+   即可看到各浏览器的效果。使用的原理就是SinglR实时推送技术。
+
+
+二.  Web Essentials 浏览器link
+1.bing 搜索  visual sudio extensions 或者 vs菜单栏中的 工具---扩展和更新中 联机 搜索 Web  Essentials 安装此插件【Web Essentials 中间有空格】
+2.重启vs
+3.会发现菜单栏中有 Web Essentials菜单
+4.启动项目、会发现浏览器左下角有一个菜单，菜单中有几个选项
+
+  a.选项一【Design】设计模式，点击Desigin之后会有一个框，在浏览器任意一个地方添加或者删除某些东西，
+     会自动与vs实时同步更改的东西。就不需要每次测试有问题，需要在vs更改，然后刷新页面，
+     很麻烦，耽误时间，开发效率提高不了。再点击依次Design代表停止使用。
+  b.选项二【Inspect】定位器，在div中找不到某些代码，就通过这个工具点击某个地方，会自动将html元素进行选中，看到具体的布局
+  c.选项三【Save F12 changes】保存f12变更 ，在页面调试一些样式时，修改、删除一些样式，然后你会发现与vs中的样式实时同步
+  d.选项四【显示隐藏插件】 隐藏后，按住Ctrl 鼠标点击页面，插件会显示出来
+  
+在css样式中的扩展
+  给某个标签增加一些样式，如果写了一些代码，不知道样式就兼不兼容各个浏览器，那么鼠标放在自己些的样式中
+  会发现兼容某些浏览器，某些浏览器不兼容，如果扩展兼容所有浏览器，会有提示，点击添加，会自动添加兼容代码
+
+在css样式中使用第三方字体
+1.添加一个p标签，给个class名字[clock]，写一个日期格式的数字
+2.在网上找一个led日期的字体，搜索  led ttf download,下载字体，放到fonts文件夹中的   然后把字体拖到css样式中
+3.在样式中给p标签样式  .clock{font-family: LED}
+
+4.写css、js会有智能提示，比如class样式 打一个点，就会提示标签中的所有class名字
+5.图片智能提示。在css样式中引入一个图片，鼠标移动上去后会有预览图片的效果
+   css图片转换成base64的编码，然后把原图删掉也可以访问，并且可以保存这个编码，都会有自动的提示
+6.#region#endregion， 在css样式中支持区域折叠
+
+7. .media 媒体设备显示div不同，不同的浏览器，显示不同的div分辨率，
+8.样式中写入字体，移动上去会自动显示字体的大小
+9.对css样式文件右击菜单，可以压缩样式、移除多余的样式，
+10.css样式文件比较大，复制一部分样式到其他样式文件中，可以直接复制要移动的css样式右键移到其他css文件中，
+11.颜色调整 ctrl+shift 按上下键可以调整颜色
+
+js中的扩展
+12.多个函数，点击函数名，f12，会自动跳到使用的函数地方
+13.shift + f12可以查看函数引用的个数
+14.//#region 
+    //#endregion
+    折叠js
+
+html中的扩展
+15.区域折叠 <!--#region xx---> <!--#endregion-->
+
+
+
+
+
+
+
+   
+  

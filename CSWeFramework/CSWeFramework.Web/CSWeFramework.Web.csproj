@@ -191,6 +191,7 @@
     <Compile Include="App_Start\UnityMvcActivator.cs" />
     <Compile Include="Controllers\CarController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\TestController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -464,6 +465,15 @@
     <Content Include="Views\Shared\_SideBarPartialPage.cshtml" />
     <Content Include="Views\Shared\_FooterPartialPage.cshtml" />
     <Content Include="Views\Car\Index.cshtml" />
+    <Content Include="Unity.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+    <None Include="UnityConfiguration30.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <Content Include="Views\Test\Index.cshtml" />
+    <Content Include="Views\Test\IndexGeneric.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

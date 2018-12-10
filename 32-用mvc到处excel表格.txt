@@ -57,11 +57,14 @@ public void Excel<TModel>(Ienumerable<TModel> model,string filename=null)where T
 public class ExcelFileResult<TMOdel>:FileResult where TModel:class
 {
 public Ienumrable<Tmodel> model{get;private set;}
-public 构造函数(Ienumable<Tmodel> model) ：base("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"){
+public 构造函数(Ienumable<Tmodel> model,string fileName=null) ：base("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"){
 if(model==null){
  throw new argu...(nameof(model));
 }
+
 this.MOdel=model;
+fileName=string.isnullorwhitespace(fileName)?Path.GetRandomFileName():fileName;
+base.FileDownName=Path.ChangeExtension(fileName,"xlsx");
 }
 
 provterted overide void 重写WriteFile(){
@@ -107,19 +110,64 @@ DisplayNameAttribute displayNameAttribute=currentPropertyInfo.GetCustomAttribute
 
 //如果不为空就获取getname，如果为空就获取
  string displayName=displayAttribute?.GetName()??displayNameAttribute?.DisplayName??currentPropertyInfo.属性名
+生成表头
+ ExcelRange currentCell=excelWorksheet.Cells[1,col];
+currentCell.Value=displayName;
+//对表头加粗
 }
  
 }
 
 //生成body
-private void GenerateExcelBody( ){
-
+private void GenerateExcelBody( ExcelWorksheet   sheet, PropertyInfo [] properties ){
+TModel [] modelArray= Model.ToArry();
+//从2开始，第一行是表头，length+1，
+fore(int row=2;row<=Model.Length+1；row++){
+ //获得当前行
+//循环列【properties】
+   拿到属性
+   获得工作表中的单元格。
+   DisplayFormatAttribute displayFormateAtribute=反射当前属性上有自定义的标签 [DisplayFormatAttribute]
+   if(isplayFormateAtribute!=null&& typeof(IFormattable).IsAssignableFrom(currentPropertyInfo.PropertyType))
+{
+当前列的值= (IFormattable)currentPropertyInfo.GetValue(currentModel).ToString(displayFormatAttribute.DataFormatString,CulrtureInfo.CurrentCulrture)
+}
+ else{  当前列值，等于当前属性的值}
+   
+}
 }
 
 
+//将ExcelController的方法，返回值返回 ExcelFileResult
+
+在action中生成假数据，当然也可以从service层获取数据
+Random radom=new Random(System.Environment.TickCount);
+List<Carviewmodel> modellist=new 。。（）；
+for(var i=0;i<50;i++){
+Carviewmodel model=new ...();
+model.price=radom.Next(10,500);
+
+}
+
+10.如果某些属性不需要导出  Excellgnore
+[XmlIgnore] 不需要导出这一列，就打此标签，
+因为这个 EPPlus 导出工具是基于xml的
+11.在Excel文件夹中添加一个ExcellgnoreAttribute:Attribute
+{
+ 在这个标签上打上只允许属性上 菜可以打
+}
+
+然后在在获取属性的时候。where排除掉打了此特性的属性
 
 
+12.格式化器 displayformat
+carviewmodel 中的价格属性。在excel中会有小数点问题
+需要自定义几位小数，具体几位小数，自己去写
+[DisplayFormat(DataFormatString="F2")]
+public decimal Price{get;set;}
 
+
+13.行高颜色，自动适应，下节课讲
 
 
 

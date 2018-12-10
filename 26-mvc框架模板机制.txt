@@ -31,6 +31,8 @@
   c.构造函数
 3.添加自定义代码生成类工厂【CustomCodeGeneratorFactory】,继承代码生成工厂【CodeGeneratorFactory】
   自定义一个插件需要导出，使用mef需要引用一个组件system.c.....，然后在类上添加导出标签 Export(typeof(CodeGeneratorFactory))
-  重写工厂方法。将自定义代码生成类返回出去，代码生成器需要一个代码生成说明信息，
+  重写工厂方法。将自定义代码生成类返回出去，代码生成器需要一个代码生成说明信息【CodeGeneratorInfomartion,具体需要参数，请看代码注释，（icon放入到资源中）】，
+4、创建UI文件夹创建wpf窗体 【SelectModelWindow】
+
 
  
