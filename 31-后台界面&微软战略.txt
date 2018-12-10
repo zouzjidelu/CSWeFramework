@@ -1,0 +1,32 @@
+﻿百度搜索 
+1.nfine 快速开发web框架
+2.dtcms  菜单导航。历史菜单
+3.adminlte
+学习。net必须知道微软的几个学习网站
+1.www.microsoft.com/net    【 语言框架】
+  sdk:开发人员工具包
+  runtime：clr
+  sdk包括运行时
+
+2.www.visualstuio.com  【工具】
+  a.vsiual studio ide 开发环境
+  b.visual studio team 项目管理工具 git，团队服务。提交代码
+    git 版本控制
+    tfs 
+  c.visual studio code 轻量级的编辑器 开源的
+  d.微软云计算 visual studio dev essentials 
+  e.microsoft azure
+3.msdn.microsoft.com/library   【api参考手册】
+  
+4.微软虚拟学院 【英文视频教程】
+5.chs9 【英文视频教程】
+================================
+百度搜索 行政区划 统计局
+
+找到xcode  行政区划  零度下载 偶一个sql脚本
+快递的京东的配送区域
+
+
+bings搜索 行政区划 国标规定看下具体的含义
+
+

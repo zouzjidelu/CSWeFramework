@@ -1,0 +1,51 @@
+﻿web项目下创建的文件夹
+1.App_Code文件夹下的代码。不会被任何人访问，并会生成一个单独的dll
+
+2.app_GlobalResources(R)全局资源文件夹 针对语言版本不同。提示信息也不同
+在web下的bin文件夹会有不同语言的文件夹。比如中文的文件夹 zh_hans，有一个后缀为
+.resources.dll可通过反编译工具打开发现，微软提供的提示信息，有key-value，
+自己可以通过创建资源管理模板[Resources.resx]。将微软的这些key复制到自己的资源中，value可以自定义成自己的提示信息即可。
+但是反编译工具不能将这个dll的代码导成 资源管理模板，那么可以通过  bings搜索
+.net resources 反编译 关键词。找到反编译winform资源文件--陈国立的链接，下方有一个工具
+下载后，解压。把项目运行起来，将这个dll丢进去，会生成资源文件
+
+3.App_Data 数据库文件等等
+4.App_Start 项目启动的时候，验证配置，项目扩展在此文件夹下做
+5.CodeTemplates 项目模板
+6.Content 图片、css文件放在这里
+7.Controller 控制器
+  控制器文件夹下可能细分文件夹，比如user文件夹、role文件夹、product文件夹
+  但是加了子文件夹，是找不到该控制器，方法有两种
+  第一。将命名空间的上的子文件夹名删掉就可以了
+  第二。bings搜索 asp.net mvc controller child nameespace 
+  在 路由配置中
+  namespaces:new [] {"CarManager.Web.Controllers.*"},建议使用第一种，
+  第三。在控制器模板将命名空间写死也可以
+8.fonts 字体目录
+9.models 
+10.scripts  
+11.Validata 验证文件夹。文件夹下创建的文件夹应该与models文件夹下创建的文件夹对应。
+12.views文件夹 也有一个webconfig。约束的是视图
+   views文件夹下有一个 shared文件夹【共享文件夹】
+   在models文件夹下创建一个usermodel类 有一个id、datetime属性
+   控制器文件夹下创建一个user控制器
+   添加视图，给视图传入一个usermodel。
+   在shared文件夹下创建一个DisplayTempaltes文件夹，微软规定名字必须是这个【显示模板】    
+   在模板文件夹下创建自己的模板 xxx.cshtml 模板中写具体的日期格式
+   如果模板有多个，具体展示某一个模板，在实体类的日期属性上写一个标记【UIHint("Data")】,
+   "Data"是具体的模板名字
+13.favicon.ico默认图标，可以换成自己公司的图标
+=========================权限============================
+权限系统。比如一个json方法。不受权限保护，但是json是通过某个功能来访问的
+比如是获取验证码。那么获取验证码是注册的功能，那么只有注册功能的才有能有获取验证码的权限
+例子：
+
+public action Register(){
+}
+
+[Register()]//必须搭上注册方法标签才能够获取验证码的权限，否则没有
+public josnresult getcode(){
+}
+
+后期做权限这块。会考虑这些
+   

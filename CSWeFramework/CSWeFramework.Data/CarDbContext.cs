@@ -32,6 +32,8 @@ namespace CSWeFramework.Data
             return base.Set<TEntity>();
         }
 
+
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             //ef创建表，自带复数功能删除掉

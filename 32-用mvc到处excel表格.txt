@@ -1,0 +1,125 @@
+﻿nuget  搜索 excel
+1.NPOI【同时导出xls,xlsx】
+ a.ole2协议。
+2.Microsoft.Office.Interop.Excel安装微软office库，使用微软office组件
+3.EPPlus【只能导出office207】更符合开发人员入门级别的使用
+  a.openxml协议
+  b.Install-package epplus
+
+一、在web层导出excel
+1.在web下安装 Install-package epplus 4.1.0
+2.传model在model属性上设置一些行高。宽高，颜色等等，就可以生成excel
+3.在web下的mvc文件夹下创建一个Excel文件夹 MVC----Excel
+4.返回一个excel文档的action
+  public actionresult test(){return view()}
+  public actionresult test2(){return partialview("aaa")}
+  public actionresult index(){ json(new list<string>())}
+  public actionresult ProductExcel(){ return Excel();}
+  public ActionResult DownloadFile(){ return file();}
+  
+5.bing 搜索  aspnetstack github链接，web开源都在这里
+  找到mvc的项目，搜索Controller类，打开后，找到file
+  找到filestreamresult文件流。输出到http客户端
+
+6.using OfficeOpenxml
+  
+  public ActionResult ProductExcel(){
+
+ using(ExcelPackage excel=new ExcelPackage){//创建excel包
+ //工作表，添加一个工作表名字
+ ExcelWorksheet sheet =excel.Workbook.Worksheets.Add("产品");
+ ExcelRange range=  sheet.Calls[1,1,5,1].Value="fdfdsfd";//参数意思是第一行第一列到第五行的第一列，可以在							选中的行列，设置样式
+ sheet.Row(5).Style.Font.Color.SetColor(Color.Red);
+ sheet.Coloum(3).Style....//样式设置说
+  sheet.Calls[1,1].Style.....//样式设置
+  excel.Save();
+}
+ }
+
+
+7.在models文件夹下创建一个car文件夹，创建一个CarViewmodel类
+在属性上写DisplayName 标签
+
+8.在mvc文件夹下的Excel文件夹下创建一个ExcelController:BaseController
+
+public void Excel<TModel>(Ienumerable<TModel> model) where TModel:class
+{
+
+}
+
+public void Excel<TModel>(Ienumerable<TModel> model,string filename=null)where TModel:class
+{
+
+}
+
+9.在Excel文件夹下创建ExcelFileResult类【因为上面，看了微软的mvc针对文件这块的源码。导出文件最终是一个流的方式输出】
+
+public class ExcelFileResult<TMOdel>:FileResult where TModel:class
+{
+public Ienumrable<Tmodel> model{get;private set;}
+public 构造函数(Ienumable<Tmodel> model) ：base("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"){
+if(model==null){
+ throw new argu...(nameof(model));
+}
+this.MOdel=model;
+}
+
+provterted overide void 重写WriteFile(){
+
+1.生成数据字节。
+2.输出流
+}
+
+}
+ 
+百度搜索 xlsx contenttype ，输出一个excel表格
+
+stackoverflow.com/
+
+
+private byte[] GenerateExcel(){
+//获得所有属性
+var properties=typeof(TModel).GetProperties();
+
+ using(ExcelPackage excel=new ExcelPackage){//创建excel包
+ //工作表，添加一个工作表名字
+ ExcelWorksheet sheet =excel.Workbook.Worksheets.Add("Sheet1");
+ ExcelRange range=  sheet.Calls[1,1,5,1].Value="fdfdsfd";//参数意思是第一行第一列到第五行的第一列，可以在							选中的行列，设置样式
+ 
+GenerateExcelHandler（sheet,properties）;
+GenerateExcelBody();
+return excelPackge.GetAsByteArray();
+
+}
+
+}
+
+//生成头部
+private void GenerateExcelHandler(ExcelWorksheet   sheet, PropertyInfo [] properties ){
+ //1.首先把属性反射出来
+ //循环所有的属性
+for(var col=1;col<=properties.Length;col++){
+//找到当前属性  
+ PropertyInfo currentPropertyInfo=properties[col-1]
+//找到displayattribute特性,DisplayNameAttribute特性
+DisplayAttribute displayAttribute=currentPropertyInfo.GetCustomAttribute<DisplayAttribute>();
+DisplayNameAttribute displayNameAttribute=currentPropertyInfo.GetCustomAttribute<DisplayNameAttribute>();
+
+//如果不为空就获取getname，如果为空就获取
+ string displayName=displayAttribute?.GetName()??displayNameAttribute?.DisplayName??currentPropertyInfo.属性名
+}
+ 
+}
+
+//生成body
+private void GenerateExcelBody( ){
+
+}
+
+
+
+
+
+
+
+
