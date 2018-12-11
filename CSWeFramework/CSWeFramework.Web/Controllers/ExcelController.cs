@@ -34,7 +34,7 @@ namespace CSWeFramework.Web.Controllers
                 });
             }
 
-            return Excel<ExcelCarViewModel>(viewModelList);
+            return Excel(viewModelList);
         }
     }
 }
