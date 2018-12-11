@@ -152,10 +152,15 @@ model.price=radom.Next(10,500);
 10.如果某些属性不需要导出  Excellgnore
 [XmlIgnore] 不需要导出这一列，就打此标签，
 因为这个 EPPlus 导出工具是基于xml的
-11.在Excel文件夹中添加一个ExcellgnoreAttribute:Attribute
-{
- 在这个标签上打上只允许属性上 菜可以打
-}
+
+11.  ExcelIgnoreAttribute
+ /// <summary>
+    /// 打上此标签，代表，属性不输出到excel中
+    /// </summary>
+    [System.AttributeUsage(System.AttributeTargets.Field | System.AttributeTargets.Parameter | System.AttributeTargets.Property | System.AttributeTargets.ReturnValue)]
+    public class ExcelIgnoreAttribute:Attribute
+    {
+    }
 
 然后在在获取属性的时候。where排除掉打了此特性的属性
 
@@ -165,7 +170,7 @@ carviewmodel 中的价格属性。在excel中会有小数点问题
 需要自定义几位小数，具体几位小数，自己去写
 [DisplayFormat(DataFormatString="F2")]
 public decimal Price{get;set;}
-
+DisplayFormatAttribute：设置数据字段的格式,在属性、字段打此标签，可以自定义自己的数据格式
 
 13.行高颜色，自动适应，下节课讲
 

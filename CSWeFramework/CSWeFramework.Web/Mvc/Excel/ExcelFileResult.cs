@@ -1,9 +1,12 @@
-﻿using OfficeOpenXml;
+﻿using CSWeFramework.Web.Models.Car;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Web;
 using System.Web.Mvc;
@@ -29,9 +32,9 @@ namespace CSWeFramework.Web.Mvc.Excel
         protected override void WriteFile(HttpResponseBase response)
         {
             //生成数据节
-            byte[] datas = this.GenerateExcel();
+            byte[] buffer = this.GenerateExcel();
             //输出流
-            response.Write(datas);
+            response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -40,7 +43,8 @@ namespace CSWeFramework.Web.Mvc.Excel
         /// <returns></returns>
         private byte[] GenerateExcel()
         {
-            PropertyInfo[] propertys = typeof(TModel).GetProperties();
+            //排除在属性上打了ExcelIgnoreAttribute标签的属性，ExcelIgnoreAttribute：不在excel中生成列名，和行数据
+            PropertyInfo[] propertys = typeof(TModel).GetProperties().Where(p => !p.IsDefined(typeof(ExcelIgnoreAttribute))).ToArray();
             //创建excel包对象
             using (ExcelPackage excel = new ExcelPackage())
             {
@@ -63,17 +67,17 @@ namespace CSWeFramework.Web.Mvc.Excel
         /// <param name="propertyInfos"></param>
         private void GenerateExcelHandler(ExcelWorksheet sheet, PropertyInfo[] propertyInfos)
         {
-            for (int i = 1; i <= propertyInfos.Length; i++)
+            for (int col = 1; col <= propertyInfos.Length; col++)
             {
                 //获得当前属性
-                PropertyInfo currentPropertyInfo = propertyInfos[i - 1];
+                PropertyInfo currentPropertyInfo = propertyInfos[col - 1];
                 //找到属性上的标签
                 DisplayNameAttribute displayNameAttribute = currentPropertyInfo.GetCustomAttribute<DisplayNameAttribute>();
                 DisplayAttribute displayAttribute = currentPropertyInfo.GetCustomAttribute<DisplayAttribute>();
                 //判断标签是存在
                 string displayName = displayNameAttribute?.DisplayName ?? displayAttribute?.GetName() ?? currentPropertyInfo.Name;
                 //给第一行的当前列，赋值
-                ExcelRange currentExcelRange = sheet.Cells[1, i];
+                ExcelRange currentExcelRange = sheet.Cells[1, col];
                 currentExcelRange.Value = displayName;
                 //标头加粗
                 currentExcelRange.Style.Font.Bold = true;
@@ -88,7 +92,28 @@ namespace CSWeFramework.Web.Mvc.Excel
         /// <param name="propertyInfos"></param>
         private void GenerateExcelBody(ExcelWorksheet sheet, PropertyInfo[] propertyInfos)
         {
-            model.toa
+            TModel[] modelArray = model.ToArray();
+            //第一行。是标头,故，从第二行开始
+            for (int row = 2; row <= modelArray.Length + 1; row++)
+            {
+                TModel model = modelArray[row - 2];
+                for (int i = 1; i <= propertyInfos.Length; i++)
+                {
+                    ExcelRange excelRange = sheet.Cells[row, i];
+                    PropertyInfo currentPropertyInfo = propertyInfos[i - 1];
+                   
+                    DisplayFormatAttribute displayFormatAttribute = currentPropertyInfo.GetCustomAttribute<DisplayFormatAttribute>();
+                    //如果属性上有此标签，并且当前属性类型，能不能被格式化
+                    if (displayFormatAttribute != null && typeof(IFormattable).IsAssignableFrom(currentPropertyInfo.PropertyType))
+                    {
+                        excelRange.Value = ((IFormattable)currentPropertyInfo.GetValue(model)).ToString(displayFormatAttribute.DataFormatString, CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        excelRange.Value = currentPropertyInfo.GetValue(model);
+                    }                    
+                }
+            }
         }
     }
 }
