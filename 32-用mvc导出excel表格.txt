@@ -19,7 +19,7 @@
   
 5.bing 搜索  aspnetstack github链接，web开源都在这里
   找到mvc的项目，搜索Controller类，打开后，找到file
-  找到filestreamresult文件流。输出到http客户端
+  找到filestreamresult文件流。发现是将流文件输出到http客户端、那么导出excel也是将流输出到客户端
 
 6.using OfficeOpenxml
   
