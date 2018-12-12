@@ -1,0 +1,175 @@
+﻿一、新建项目,选择mvc【UserManager】
+说权限，必须要有资源
+1.资源（Action，Row【记录】，File【文件】）
+2.用户（User:A--->资源）
+3.角色或者组织（一个用户多个角色，一个角色多个用户，多对多的关系）
+
+老师：上课，下课【权限（资源）】
+司机：开车【权限（资源）】
+A用户是老师，同时也是司机【两个角色】
+
+某角色 特殊资源【权限】，不要做成某用户有特殊权限，尽量不要让用户与权限有关系。
+A用户有特殊权限
+
+基于角色的权限系统（RBAC）
+
+超级管理员  系统管理员，普通管理员
+
+mvc中有哪些资源
+1.A类用户能不能查询到编号为123的汽车【实体权限】
+2.A类用户能不能访问某个功能点（删除日志）【操作权限】
+
+bings搜索  dtcms  ，查看此系统权限如何做的。 
+二、安装EF、创建实体类
+1.创建文件夹【Entitys】
+   a.创建一个BaseEntity类，创建要给属性ID
+   b.创建一个Role类，继承BaseEntity，有一个通用主键
+      Name、Active【定义默认值启用[EfaultValue(true)]】、
+      public virtual IColl...<Permissions> Permissions{get;set;}=new ...();
+   c.创建一个User类，，继承BaseEntity，有一个通用主键
+      1.Name,
+         Password,
+         Active(是否禁用)【定义默认值启用[EfaultValue(true)]】、
+      2.用户与角色多对多关系，定义一个关联属性
+         public virtual ICollection<Role> Roles{get;set;}=new List<Role>();
+      3.为什么不在Role添加User？因为用户有多个的话比如10w，通过role去点用户【Role.Users】数据库直接挂掉
+   d.创建一个Permission类，，继承BaseEntity，有一个通用主键
+      Name,
+      Category[分类],Description[描述]，
+      public IEnumerable<Permission> Implies{get;set;}//隐式权限，
+      比如有删除权限，肯定必须有查询，才能删除
+   e.创建一个EntityPermission[实体权限]类
+      每个实体有自己编号
+      ID      Type     role
+       1        user     1
+       2         car      2
+       属性有：
+       EntityID
+       EntityName
+       RoleID
+       public virtual Role Role{get;set;}
+    f.创建 UserManagerContext 数据库上下文类
+      1.继承Dbcontext，
+       2.静态构造函数 数据库不存在初始化数据库 Database.SetInitalizer(new  CreateDatabaseIfNotExists<UserManagaerDbcontext>)
+       3.构造函数，将数据库连接给base("UserManager")   
+       4. public DbSet<User> Users{get;set;}
+       5.public DbSet<Role> Roles{get;set;}
+       6.public DbSet<EntityPermission> EntityPermissions{get;set;}
+       7.重写方法 OnModelCreating(DbModelBuilder modelBuilder){
+	     1.modelBuilder.Convention.Remove<>//删除复数
+	     2.找到实现了EntityTypeconfig的类型，进行配置初始化
+              
+
+
+
+        }
+        8.创建Mapping文件夹
+           a.创建UserMap类继承 EntityTypeConfiguration<User>
+             在构造函数中配置字段信息：
+              this.HashKey(t=>t.ID);
+              用户名：必须的，最大长度20
+              密码：必须的，最大长度128
+              //用户与角色多对多的关系，不需要创建关系表，
+              this.HashMany(t=>t.Roles).WithMany().Map(m=>{m.ToTable("UserRole");
+               m.MapLeftKey("UserId");m.MapRightKey("RoleID");});
+
+           b.创建RoleMap类继承 EntityTypeConfiguration<Role>
+               在构造函数中配置字段信息：
+               ..
+	..	.
+	...
+	this.HashMany(t=>t.Permission).WithMany().Map(m=>{m.ToTable("RolePermission");
+               m.MapLeftKey("RoleID");m.MapRightKey("PermissionID");});
+     
+           c.创建EntityPermissionMap类继承 EntityTypeConfiguration<EntityPermission>
+               在构造函数中配置字段信息：
+               三个字段共同是一个主键，三个字段同时唯一，就是特殊权限
+	this.Hashkey(t=>new{t.EntityID,t.EntityName,t.RoleID});
+                EnittyName不能为空，最大20长度
+	this.HasRequired(t=>t.Role).WithMany().HashForeignKey(t=>t.RoleID)。WillCascadeOnDelete(true);//级联删除  角色删除，对应的角色的外键也需要删除
+ 	
+	..	.
+	...
+	this.HashMany(t=>t.Permission).WithMany().Map(m=>{m.ToTable("RolePermission");
+               m.MapLeftKey("RoleID");m.MapRightKey("PermissionID");});
+
+三、webcofig 配置数据库连接字符串
+四、enable-Migrations  允许迁移
+五、update-database 数据迁移  
+查看数据库会有表了
+查看数据库关系图，查看表的关系
+当角色1删除，会删除用户角色关系表中的外键，角色(操作)权限关系表中外键，实体权限外键
+
+
+实体权限、（操作）权限如何来？
+
+
+用户创建、需要获取验证码，获取验证码是用户创建的功能，
+用户与获取验证码是一对多的关系【功能点与action 的关系是一对多的关系】
+那么用户创建、编辑都需要验证码就在action上打【UserCreate,UserEdit】
+功能点是定死的
+
+在获取验证码的action上标记的是用户创建的权限才可以使用[Authorize("UserCreate")]，就可以解决此问题
+
+六、权限提供与功能分开
+1.新建一个安全文件夹Security
+2.在文件夹内创建一个接口，权限提供接口 IPermissionProvider【最后倒入数据库】
+   //提供权限记录
+   Ienumrable<Permission> GetPermissions();
+3.创建接口的实现 PermissionProvider:IPermissionProvider
+   a.实现获取权限记录的方法
+      List<Permission> permissions=new List<Permission>();
+       permissions.add(new Permission(){
+         Name="UserCreate",
+         Category="用户管理",
+         Description="创建"
+     });
+
+七、写权限导入数据库的脚本【vs生成项目的时候导入】
+PowerShell脚本
+项目----属性----生成事件---命令加入，生成成功时加入
+
+如果数据库没有，则同步，如果代码删了，数据库也需要删掉，做同步操作
+
+在App_Data文件夹创建一个脚本【create.permisssion.ps1】
+1.装载dll，【UserManager】
+2.在脚本拿到当前项目连接字符串[UserManager]
+
+运行脚本，右键运行脚本
+调试脚本
+打开Powershell
+将脚本复制到Powershell中运行
+
+
+权限最终目的是让开发者配置简单，让用户配置灵活
+
+   
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
