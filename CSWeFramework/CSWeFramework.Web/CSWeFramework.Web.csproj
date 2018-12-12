@@ -201,6 +201,7 @@
     </Compile>
     <Compile Include="Models\Car\CarViewModel.cs" />
     <Compile Include="Models\Car\ExcelCarViewModel.cs" />
+    <Compile Include="Mvc\Excel\ExcelColumnAttribute.cs" />
     <Compile Include="Mvc\Excel\ExcelIgnoreAttribute.cs" />
     <Compile Include="Mvc\ActionFilterRegister.cs" />
     <Compile Include="Mvc\AutoMapperProfile.cs" />
@@ -210,6 +211,7 @@
     <Compile Include="Mvc\CustomViewPage.cs" />
     <Compile Include="Mvc\Excel\ExcelFileResult.cs" />
     <Compile Include="Mvc\Excel\ExcelsController.cs" />
+    <Compile Include="Mvc\Excel\ExcelSheetAttribute.cs" />
     <Compile Include="Mvc\LanuageActionFilter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.en-us.Designer.cs">

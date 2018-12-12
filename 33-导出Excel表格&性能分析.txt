@@ -1,0 +1,200 @@
+﻿一、生成标头居中
+在ExcelFileResult类中的 GenerateExcelHander方法做更改
+
+//标头水平方向居中
+currentCell.Style.HorizontalAlignment=OfficeOpenXml.Style.ExcelHovizontalAlignment.Center;
+//垂直方向居中
+currentCell.Style.VerticalAlignment=OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+二、指定列宽行高、自定义excel自带的格式化[支持对excel格式的支持，以及c#的支持，c#的支持在上节课已经写了]
+1.在CarViewModel打标签。支持列宽行高
+2.创建一个标签类ExcelSheetAttribute:Attribute,
+  如何设计？
+  a.只能打在类上，能继承，不允许多个。只识别第一个 
+  b.属性创建
+    Name      名字 = 默认sheet1
+    RowHeight 行高 = 默认 26
+  c.在类上打标签。[ExcelSheet(Name="汽车",RowHeight=28)]
+3.在ExcelFileResult类中的 GenerateExcel方法做更改
+    
+  a.找到实体类上的自定义特性 ExcelSheetAttribute.如果为空就创建此特性，此特性有默认的名字、行高
+     将Excel sheet名字更改为ExcelSheetAttribute.Name
+
+  b.传入GenerateExcelHander方法、GenerateExcelBody方法
+     I:excelWorksheet.Row(1).Height=ExcelSheetAttribute.RowHeight
+
+[只能标记在属性上，字段上，不允许标记多次，]
+public clss ExcelColumnAttribute:Attribute
+{
+   public bool IsCenter{get;set;}//是否让列居中，
+   public int  Sort{get;set;}//列排序
+   public string Format{get;set;}//格式化器【Excel自带的格式化】
+   public int Wdiht{get;set;}//列宽
+
+}
+
+在实体类的属性上打ExcelColumnAttribute标签，指定属性具体的格式
+
+[ExcelColumn(Format="yyyy"年m"月 d日")]
+CreateTime{get;set;}
+[ExcelColumn(Format="0.00")]
+Price{get;set;}
+
+1.在GenerateExcelBody方法中，找到该特性。如果为空就new一个默认的特性
+2.如果设置的列属性有Format才赋值、否则不赋值
+3.currentCell.Style.Numberformat.Format=columnAttribute.Format;
+
+//下载epplus官方api文档，深入学习
+www.epplus.codeplex.com/downloads
+文档下载完默认打不开、点击文档，属性、解除锁定，全是英文，慢慢学
+                                 
+
+三、搭建的框架，性能检测CarManager
+1.在CarController中获得car集合
+将数据库查出来的集合，与dto进行转换,需要引用映射插件dll， using AutoMapper.QueryableExtensions;
+AutoMapper.Mapper.Initialize(conf=>conf.CreateMap<Car，NewCarViewModel>());
+var model =carservie.GetCars().AsQueryable().ProjectTo<CarViewModel>();
+
+=============================================================================
+性能分析
+1.bings  nuget miniprofiler  在官网查看操作步骤  官网：miniprofiler.com
+可以在页面显示sql语句性能显示出来
+
+stack Overflow 公司 产品
+1.redis.net、2. miniproler、3.硬件资源监控
+
+一、新建mvc项目、选择个人用户账户，微软会自动生成数据及数据库，等会用来做数据库性能检测
+1.搜索 miniprofiler 安装包  Install-Package MiniProfiler 3.2.0.157
+在官网查看使用教程：
+2.在模板中引入包。及挖一个盒子。后期来展示性能
+3.在global.asax中，在 Application_BeginRequest和 ...._EndRequest方法中写入收集性能的方法，
+4.webconfig中配置加handlers，必须有这个东西，否则不能监控，每个url过来后都会进mvc路由系统，
+  每次找控制器，那么能不能拦截，只要有指定【Path】的路径，不要紧控制器，路由到mini的库中
+  <system.webService>
+    <handlers>
+	<add name="MiniProfiler" path="mini-profiler-resources/*"
+             verb="*" type="System.Web.Routing.UrlRoutingModule"
+             resourceType="Unspecified" .....
+    </handlers>
+  </system.webService>
+
+5.打开页面会发现左上角有一个图标。会有时间展示，当前地址请求消耗了多少s，以及js，样式的花销时间
+  能不能查看具体的action消耗时间呢？，那么需要拦截action，那么需要安装miniprofiler
+  .mvc的支持包，查看自己使用的mvc版本。进行对应的安装。都在官网有链接地址
+  如果是mvc4  Install-Package Miniprofiler.mvc4 3.0.11 安装在web项目
+  能够监控 ef mvc wcf mongodb等等  miniprofiler核心组件。需要监控什么，就安装对应的包。比如wcf
+
+7.在FilterConfig类中注册
+
+  //这里应该加开关，有开关才性能分析action性能监控
+  filters.Add(new StackExchange.Profiling.Mvc.ProfilingActionFilter());
+
+8.再次打开页面。点击某个按钮，都会显示请求地址开销时间
+  
+9.监视视图引擎
+  Appaciton_Start(){
+
+  List<IViewEngine> viewEngines=ViewEngines.Engines.ToList();
+  //清空引擎
+  ViewEngines.Engines.Clear();
+  //循环引擎
+  for..
+  {
+   //设计模式中的装饰器模式。A---C-----B  ,A监视B，必须通过C来做。
+   var warpviewengine= new StackExchangge.Profiling.Mvc.ProfilingViewEngine(viewEngine);
+   ViewEngines.Engines.Add(warpViewEngine);
+   }
+}
+
+再次打开页面 会把请求地址、渲染页面、查找页面，js性能都可看到
+
+
+10.sql性能检测
+a.安装 minprofiling.ef6的包
+b.在Application_Start()方法中初始化ef6性能检测器
+  MiniProfilerEF6.Initialize();
+c.打开页面，登录操作，会看到sql的时间
+
+11.性能监控页面美化
+
+12.将性能检测工具配置代码统一管理 
+在CarManager框架 web项目装载 miniprofiler包，以及mini EF5的安装包,以及mvc5的mini安装包
+
+不在gloab中写性能分析代码也能进行热插拔。不需要就直接注释或者删掉就行了，
+
+a.创建一个MiniProfilerActiveator mini激活器，并在类上写assembly start studown【如果关闭不做事情，就不需要】
+b.创建Start End 方法
+在webconfig中appsetings节点下添加一个mini监控器是否启用的配置
+<add key ="MiniPrefilerEnabled" value="true" />//默认启动
+
+public statci void Start(){
+
+bool enabled=Convert.ToBoolean(ConfigurationManager.AppSettings["MiniPrefilerEnabled"]);
+if(enabled){
+  //动态httpmodel、将module注入到管道中
+  DynamicModuleUtilityy.RegisterModule(typeof(MiniProfilerStatupModule));
+
+ //过滤器加进去
+  GlobalFilters.filters.Add( new ProfilingActionFilter());
+ //EF6监视引擎初始化
+  MiniProfilierEF6.Initialize();
+ //视图引擎扩展
+  List<IViewEngine> viewEngines=ViewEngines.Engines.ToList();
+  //清空引擎
+  ViewEngines.Engines.Clear();
+  //循环引擎
+  for..
+  {
+   //设计模式中的装饰器模式。A---C-----B  ,A监视B，必须通过C来做。
+   var warpviewengine= new StackExchangge.Profiling.Mvc.ProfilingViewEngine(viewEngine);
+   ViewEngines.Engines.Add(warpViewEngine);
+   }
+ }
+}
+
+//将监视器启动注入到httpmodel管道中
+public class MiniProfilerStatupModule:IHttpModule
+{
+bool enabled=Convert.ToBoolean(ConfigurationManager.AppSettings["MiniPrefilerEnabled"]);
+ public void Dispose(){}
+
+public void Init(HttpApplication context){
+ context.BeingRequest+=(sender,e)=>{
+   
+   if(enabled){
+  
+    Start();
+   }
+  }
+
+ context.EndRequest+=(sender,e)=>{
+   
+
+  }  
+
+
+}
+}
+13.webconifg中system.web中加入引擎的heandle配置节点
+
+14.在视图模板【Master】中加入@MiniProfiler.RenderIncludes();	
+
+
+15.如果不需要监控性能就设置为 MiniProfilerStatupModule=false
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,32 @@
+2018-12-12 17:32:43.0283 | Error | 发现未处理的异常 System.Exception: ColumnMax can not span over existing column 3.
+   在 OfficeOpenXml.ExcelColumn.set_ColumnMax(Int32 value)
+   在 OfficeOpenXml.ExcelWorksheet.CopyColumn(ExcelColumn c, Int32 col, Int32 maxCol)
+   在 OfficeOpenXml.ExcelWorksheet.Column(Int32 col)
+   在 CSWeFramework.Web.Mvc.Excel.ExcelFileResult`1.GenerateExcelBody(ExcelWorksheet sheet, PropertyInfo[] propertyInfos, ExcelSheetAttribute excelSheetAttribute) 位置 E:\asp.net mvc+ef零度\CSWeFramework\CSWeFramework\CSWeFramework.Web\Mvc\Excel\ExcelFileResult.cs:行号 146
+   在 CSWeFramework.Web.Mvc.Excel.ExcelFileResult`1.GenerateExcel() 位置 E:\asp.net mvc+ef零度\CSWeFramework\CSWeFramework\CSWeFramework.Web\Mvc\Excel\ExcelFileResult.cs:行号 63
+   在 CSWeFramework.Web.Mvc.Excel.ExcelFileResult`1.WriteFile(HttpResponseBase response) 位置 E:\asp.net mvc+ef零度\CSWeFramework\CSWeFramework\CSWeFramework.Web\Mvc\Excel\ExcelFileResult.cs:行号 37
+   在 System.Web.Mvc.FileResult.ExecuteResult(ControllerContext context)
+   在 System.Web.Mvc.ControllerActionInvoker.InvokeActionResult(ControllerContext controllerContext, ActionResult actionResult)
+   在 System.Web.Mvc.ControllerActionInvoker.InvokeActionResultFilterRecursive(IList`1 filters, Int32 filterIndex, ResultExecutingContext preContext, ControllerContext controllerContext, ActionResult actionResult)
+   在 System.Web.Mvc.ControllerActionInvoker.InvokeActionResultFilterRecursive(IList`1 filters, Int32 filterIndex, ResultExecutingContext preContext, ControllerContext controllerContext, ActionResult actionResult)
+   在 System.Web.Mvc.ControllerActionInvoker.InvokeActionResultWithFilters(ControllerContext controllerContext, IList`1 filters, ActionResult actionResult)
+   在 System.Web.Mvc.Async.AsyncControllerActionInvoker.<>c__DisplayClass3_6.<BeginInvokeAction>b__3()
+   在 System.Web.Mvc.Async.AsyncControllerActionInvoker.<>c__DisplayClass3_1.<BeginInvokeAction>b__5(IAsyncResult asyncResult) 
+ ControllerActionInvoker.InvokeExceptionFilters => CustomHandleErrorAttribute.OnException => NLogLogger.Error 
+
+2018-12-12 17:32:43.6653 | Fatal | 致命错误 System.Exception: ColumnMax can not span over existing column 3.
+   在 OfficeOpenXml.ExcelColumn.set_ColumnMax(Int32 value)
+   在 OfficeOpenXml.ExcelWorksheet.CopyColumn(ExcelColumn c, Int32 col, Int32 maxCol)
+   在 OfficeOpenXml.ExcelWorksheet.Column(Int32 col)
+   在 CSWeFramework.Web.Mvc.Excel.ExcelFileResult`1.GenerateExcelBody(ExcelWorksheet sheet, PropertyInfo[] propertyInfos, ExcelSheetAttribute excelSheetAttribute) 位置 E:\asp.net mvc+ef零度\CSWeFramework\CSWeFramework\CSWeFramework.Web\Mvc\Excel\ExcelFileResult.cs:行号 146
+   在 CSWeFramework.Web.Mvc.Excel.ExcelFileResult`1.GenerateExcel() 位置 E:\asp.net mvc+ef零度\CSWeFramework\CSWeFramework\CSWeFramework.Web\Mvc\Excel\ExcelFileResult.cs:行号 63
+   在 CSWeFramework.Web.Mvc.Excel.ExcelFileResult`1.WriteFile(HttpResponseBase response) 位置 E:\asp.net mvc+ef零度\CSWeFramework\CSWeFramework\CSWeFramework.Web\Mvc\Excel\ExcelFileResult.cs:行号 37
+   在 System.Web.Mvc.FileResult.ExecuteResult(ControllerContext context)
+   在 System.Web.Mvc.ControllerActionInvoker.InvokeActionResult(ControllerContext controllerContext, ActionResult actionResult)
+   在 System.Web.Mvc.ControllerActionInvoker.InvokeActionResultFilterRecursive(IList`1 filters, Int32 filterIndex, ResultExecutingContext preContext, ControllerContext controllerContext, ActionResult actionResult)
+   在 System.Web.Mvc.ControllerActionInvoker.InvokeActionResultFilterRecursive(IList`1 filters, Int32 filterIndex, ResultExecutingContext preContext, ControllerContext controllerContext, ActionResult actionResult)
+   在 System.Web.Mvc.ControllerActionInvoker.InvokeActionResultWithFilters(ControllerContext controllerContext, IList`1 filters, ActionResult actionResult)
+   在 System.Web.Mvc.Async.AsyncControllerActionInvoker.<>c__DisplayClass3_6.<BeginInvokeAction>b__3()
+   在 System.Web.Mvc.Async.AsyncControllerActionInvoker.<>c__DisplayClass3_1.<BeginInvokeAction>b__5(IAsyncResult asyncResult) 
+ ControllerActionInvoker.InvokeExceptionFilters => CustomHandleErrorAttribute.OnException => NLogLogger.Fatal 
+

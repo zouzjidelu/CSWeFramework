@@ -1,9 +1,11 @@
 ﻿using CSWeFramework.Web.Models.Car;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -48,12 +50,17 @@ namespace CSWeFramework.Web.Mvc.Excel
             //创建excel包对象
             using (ExcelPackage excel = new ExcelPackage())
             {
-                //将新工作表添加到空工作簿中
-                ExcelWorksheet sheet = excel.Workbook.Worksheets.Add("sheet1");
+                //获取用户自定义的工作表的属性设置【行高、列宽、名字】
+                ExcelSheetAttribute excelSheetAttribute = typeof(TModel).GetCustomAttribute<ExcelSheetAttribute>() ?? new ExcelSheetAttribute(); ;
+                //将新工作表添加到空工作簿中、指定工作表的名称
+                ExcelWorksheet sheet = excel.Workbook.Worksheets.Add(excelSheetAttribute.Name);
+                //sheet.Row(excelSheetAttribute.RowHeight);
+                //sheet.Column(excelSheetAttribute.ColumnWeight);
+
                 //添加页眉
-                this.GenerateExcelHandler(sheet, propertys);
+                this.GenerateExcelHandler(sheet, propertys, excelSheetAttribute);
                 //添加body 
-                this.GenerateExcelBody(sheet, propertys);
+                this.GenerateExcelBody(sheet, propertys, excelSheetAttribute);
 
                 return excel.GetAsByteArray();
             }
@@ -65,8 +72,15 @@ namespace CSWeFramework.Web.Mvc.Excel
         /// </summary>
         /// <param name="sheet"></param>
         /// <param name="propertyInfos"></param>
-        private void GenerateExcelHandler(ExcelWorksheet sheet, PropertyInfo[] propertyInfos)
+        private void GenerateExcelHandler(ExcelWorksheet sheet, PropertyInfo[] propertyInfos, ExcelSheetAttribute excelSheetAttribute)
         {
+            //设置行高、列宽
+            sheet.Row(1).Height = excelSheetAttribute.RowHeight;
+            sheet.Column(1).Width = excelSheetAttribute.ColumnWeight;
+            sheet.TabColor = Color.Yellow;
+            //单元格自适应，设置此项，则不能设置单元格的宽高。否则跑出异常
+            sheet.Cells.Style.ShrinkToFit = true;
+
             for (int col = 1; col <= propertyInfos.Length; col++)
             {
                 //获得当前属性
@@ -77,10 +91,17 @@ namespace CSWeFramework.Web.Mvc.Excel
                 //判断标签是存在
                 string displayName = displayNameAttribute?.DisplayName ?? displayAttribute?.GetName() ?? currentPropertyInfo.Name;
                 //给第一行的当前列，赋值
-                ExcelRange currentExcelRange = sheet.Cells[1, col];
-                currentExcelRange.Value = displayName;
+                ExcelRange currentCell = sheet.Cells[1, col];
+                currentCell.Value = displayName;
                 //标头加粗
-                currentExcelRange.Style.Font.Bold = true;
+                currentCell.Style.Font.Bold = true;
+                //标头水平方向居中
+                currentCell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                //垂直方向居中
+                currentCell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                //设置背景颜色
+                currentCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                currentCell.Style.Fill.BackgroundColor.SetColor(Color.Red);
             }
         }
 
@@ -90,7 +111,7 @@ namespace CSWeFramework.Web.Mvc.Excel
         /// </summary>
         /// <param name="sheet"></param>
         /// <param name="propertyInfos"></param>
-        private void GenerateExcelBody(ExcelWorksheet sheet, PropertyInfo[] propertyInfos)
+        private void GenerateExcelBody(ExcelWorksheet sheet, PropertyInfo[] propertyInfos, ExcelSheetAttribute excelSheetAttribute)
         {
             TModel[] modelArray = model.ToArray();
             //第一行。是标头,故，从第二行开始
@@ -99,20 +120,32 @@ namespace CSWeFramework.Web.Mvc.Excel
                 TModel model = modelArray[row - 2];
                 for (int i = 1; i <= propertyInfos.Length; i++)
                 {
-                    ExcelRange excelRange = sheet.Cells[row, i];
+                    ExcelRange excelCell = sheet.Cells[row, i];
                     PropertyInfo currentPropertyInfo = propertyInfos[i - 1];
-                   
+
                     DisplayFormatAttribute displayFormatAttribute = currentPropertyInfo.GetCustomAttribute<DisplayFormatAttribute>();
                     //如果属性上有此标签，并且当前属性类型，能不能被格式化
                     if (displayFormatAttribute != null && typeof(IFormattable).IsAssignableFrom(currentPropertyInfo.PropertyType))
                     {
-                        excelRange.Value = ((IFormattable)currentPropertyInfo.GetValue(model)).ToString(displayFormatAttribute.DataFormatString, CultureInfo.InvariantCulture);
+                        excelCell.Value = ((IFormattable)currentPropertyInfo.GetValue(model)).ToString(displayFormatAttribute.DataFormatString, CultureInfo.InvariantCulture);
                     }
                     else
                     {
-                        excelRange.Value = currentPropertyInfo.GetValue(model);
-                    }                    
+                        excelCell.Value = currentPropertyInfo.GetValue(model);
+                    }
+
+                    ExcelColumnAttribute excelColumnAttribute = currentPropertyInfo.GetCustomAttribute<ExcelColumnAttribute>() ?? new ExcelColumnAttribute();
+                    excelCell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    excelCell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    if (!string.IsNullOrEmpty(excelColumnAttribute.Format))
+                    {
+                        excelCell.Style.Numberformat.Format = excelColumnAttribute.Format;
+                    }
+
+                    //设置行高、列宽[优先使用列设置的宽高，否则使用标头设置的宽高]
+                     sheet.Column(i).Width = excelColumnAttribute.Width > 0 ? excelColumnAttribute.Width : excelSheetAttribute.ColumnWeight;
                 }
+                sheet.Row(row).Height = excelSheetAttribute.RowHeight;
             }
         }
     }
