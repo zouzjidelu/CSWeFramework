@@ -1,1 +1,226 @@
-﻿
+﻿一、创建一个RoleController控制器、视图，展示所有角色列表
+
+二、在Role控制器写一个授权action[Authorize]，传入当前授权的角色id，
+1.首先需要将角色查出来、将权限查出来，通过Category分类分组，得到一个groups
+2.mvc提供了一个SelectListItem
+List<SelectListItem> selectListItems=new ...();
+遍历groups
+SelectListGroup selectListGroup=new ....(){ 
+Name=group.key };
+selectListItems.AddRange(group.Select(g=>new SelectListItem{
+   Group=selectListGroup,
+   Selectd=role.Permissions.Any(rp=>rp.ID=g.ID),
+   value=g.ID.tostring(),
+  Text=g.Description
+}));
+
+return view(new SelectList(selectListItems));
+
+3.找到当前角色已经有的权限，并且绑定到页面上。
+将权限返回到页面上，让用户进行勾选。勾选完成，表单提交。，提交到后台，
+接收角色id，选中的权限。然后将当前角色已经勾选的权限，但是数据库没有的
+加入到角色的权限集合中，然后统一提交到数据库，保存即可
+这些代码，每个人做法不一样，思路写在这里，具体怎么做。需要自己去实现
+
+
+4.创建一个test控制器，
+  a.写一个验证码的action【GetCode】
+  b.写一个验证码的action【GetCode2】
+  c.在GetCode、GetCode2上打Authorize("TextIndex")
+  d。如果在控制器下的所有action都需要有权限访问，就在控制器上打此标签
+       如果控制器下所有的action都有权限访问，但是某一个不能访问,就需要在此action上打Allow'A'nony..
+  
+5.在Security文件夹创建ActionAuthorizeAttribute类，继承微软的AuthorizeAttribute
+   并，可以在class，方法上打此标签，不能继承，可以打多个
+
+
+如果有TextIndex、TestEdit,TestCreate这些权限，才可以访问，就在
+控制器上标记
+
+6.ActionAuthorizeAttribute类中写代码
+ public string [] PromissionNames{get;private set;}
+
+ctor(params string [] permissionNames){
+
+this.PromissionNames=permissionNames??new string [0] ;
+}
+
+public override void OnAuthorization(AuthorizationContext filterContext)
+{
+if(filterContext=null){
+抛异常
+}
+//当前请求的aciont上是否有匿名的特性，如果有就不验证
+if(filtercontext.actiondescriptor.isdefined(typeof(allowannymouattribute),true))
+return 
+}
+
+
+1.认证
+2.授权
+//没有认证
+if(! filtercontext.httpcontext.user.identity.isauthenticatod){
+HandleUnautorizeRequest(filtercontext);
+return;
+  }
+
+string actionName=nfiltercontext.ActionDescriptor.Actioname;
+string controllerName=filterContext.ActionDescriptor.ControllerDescriptor.ControllerName;
+List<string> actionPermissionName=PermissionName.ToList();
+//加上当前求的action是有权限的
+ actionermissionName.Add(ControllerName+actionName);
+
+//如果有任何一个权限有，就通过 
+if(actionPermissionNames.Any()){
+ return;
+}
+HandleUnautorizeRequest(filtercontext);
+
+  }
+
+ovveride void HandleUnautorizeRequest(...){
+  //已经认证，没有权限、返回403
+  if(filtercontext.httpcontext.request.isauthenticted){
+            filtercontext.result=new httpstatuscoderesult((int)HttpStatusCode.Forbidden);//返回403，没有权限
+  }else{
+//没有认证
+base.HandleUnauthorizedRequest(filtercontext);
+}
+}
+
+7.在Action上打 ActionAuthorizeAttribute标签，标签中写入有权限的name,多个就以逗号隔开，即可
+
+
+
+36.mvc权限设计2
+1.在控制器中添加usercontroller、页面
+2.做一个登陆界面
+   如果在页面输入了想要进入的页面，但是没有登陆，跳转到登陆页面，
+   如果登陆完成，应该自动跳转到想要进入的页面，而不是主页面
+3.在user控制器的Login中接受一个 returnurl参数
+   然后再传入到view中保存下来 ViewBag.ReturnUrl=returnUrl;
+ 4.Login方法应该是所有的人都能够访问，所以打上标签Allowanonymous
+ 5.添加一个视图 Login，接收LoginModel实体、returnurl
+ 6.在model文件夹下创建一个loginmodel.cs,属性有
+   [DisplayName("用户名")]  
+   public string UserName，
+   [DisplayName("密码")]
+   public string Password，
+   [DisplayName("记住我")]
+   public bool RememberMe[是否记住密码]
+
+7.引用脚本，boostarp样式  @Styles.Render("/Content/css") 
+   表单提交数据   
+8.在User控制器中添加一个Loginaction，传入一个LoginModel，返回的url（returnurl），
+   并标记POst请求，及允许访问的特性【AllowAnonymouse】、【ValidataAntiForgaryToken】，加上此特性验证非法提交
+ a.如果用户中有一个用户名&密码一样，说明登陆成功，    
+    登陆成功
+    写cookie
+    如果有returnurl就
+         返回跳转 return  Redirect(returnUrl)
+    否则就跳转到home /index
+    
+    如果没有登陆成功，就返回用户名密码不对， 
+    MOdelState.AddModelError(string.empty,"无效的用户名密码");
+ b.返回 loginmodel，
+
+ c.在页面写表单提交的数据，
+   @using(Html.BeginForm("Login","User",new{ReturnIrl=ViewBag.ReturnUrl},FormMethod.POst)){
+   @HtmlAntiForgeryToken();//跟在loginaction上打击的token标签，在页面注入唯一编码，将编码返回给后台，mvc会自动验证判断
+                                               发现相同的就是合法的。防止没加载页面，伪造请求，post数据，就会拦截，发现请求来源不是一个表单，解决安全问题
+
+   
+   }
+
+bootcdn引用bootstarp的样式
+推荐图标库
+FontAwesome、 icons、glyphicon icon、
+在登陆也引用用户名、密码的图标
+然后输入账号密码提交后台，做验证
+
+9.在Security文件夹  添加一个接口IAuthorizeProvider，
+  void SignIn(User user,bool rememberMe);//登陆（User 用户、bool 记住）
+  void SignOut();
+  User GetAuthorizeUser();
+
+10.添加AuthorizeProvider类，实现IAuthorizeProvider接口
+ 
+
+public  void SignIn(User user,bool rememberMe)
+{
+  
+    string userData=Guid.NewGuid().ToString();
+   //生成票据
+    var ticket=new FormsAuthenticationTicket(1，user.Name,DateTime.Now,DateTime.Now.AddDays(1),rememberMe,userdata);//参数：版本，名字，当前时间，过期日期，记住密码，用户数据【userData】(唯一性)
+  //加密票据
+  string encryptedTicket=FormsAuthentication.Encypt(ticket);
+  //写cookie
+  var cookie=new HttpCookie(FormsAuthentication.FormsCookieName[微软默认的票据名称]，encryptedTicket){HttpOnly=true;//只读的，客户端不能更改};
+  HttpContext.Current.Response.Cookies.Add(cookie);
+
+
+
+}
+public  void SignOut(){
+ FormsAuthentication.SignOut();
+
+}
+
+public   User GetAuthorizeUser(){
+HttpContext httpContext=HttpContext.Current;
+//当前httpcontext不是空并且请求不是空，并且请求是认证过的。并且是Form认证种植的票据
+if(httpContext!=null&&httpContext.Request!=null&&httpContext.Request.IsAuthenticated&&(httpContext.User.Identity is FormsIdentity))
+ {
+    FormsIdentity formIdentity=(FormsIdentity)httpcontext.User.Identity;
+    string userName=formIdentity.Ticket.Name;
+    string userData= formIdentity.Ticket.UserData;
+   if(!string.IsNullOrWhiteSpace(userName)) {
+   
+     return db.Users.SingleOrDefault(u=>u.Name==userName);//这里应该还需要种植Id
+    //可以将此信息放入缓存中，不用每次都来获取
+    
+  
+   }
+ }
+
+return null;
+}
+
+11.在Login Post方法中使用IAuthorizeProvider
+public actionresult login(LoginModel model,string returnurl){
+
+IAuthorizeProvider authorizeProvider=new AuthorizeProvider();
+//可以将LoginModel实体类映射成数据库的实体。通过mapper
+ 
+ if(db.Users.Any(u=>u.Name==model.UserName&&u.Password=model.Password)){
+  authorizeProvider.SiginIn(new User{Name=model.UserName;Password=model.Password},model.RemeberMe);
+  if(!string.isnull(returnurl)) 
+ .....
+  }else{
+  ....
+  }
+}
+
+
+
+
+
+  
+
+  
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
