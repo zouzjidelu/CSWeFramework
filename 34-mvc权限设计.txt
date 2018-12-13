@@ -88,10 +88,7 @@ bings搜索  dtcms  ，查看此系统权限如何做的。
                 EnittyName不能为空，最大20长度
 	this.HasRequired(t=>t.Role).WithMany().HashForeignKey(t=>t.RoleID)。WillCascadeOnDelete(true);//级联删除  角色删除，对应的角色的外键也需要删除
  	
-	..	.
-	...
-	this.HashMany(t=>t.Permission).WithMany().Map(m=>{m.ToTable("RolePermission");
-               m.MapLeftKey("RoleID");m.MapRightKey("PermissionID");});
+	
 
 三、webcofig 配置数据库连接字符串
 四、enable-Migrations  允许迁移
