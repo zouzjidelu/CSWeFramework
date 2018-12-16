@@ -1,0 +1,78 @@
+﻿上传图片控件
+1.Angular file upload 
+2.Jquery File Upload demo
+找jqueryupload学习资料：jquery -upload mvc5 github 
+3.web Uploader【百度的webauploader】
+
+==================================
+一、.菜单【导航】===属于（菜单）实体权限
+2.Entitys文件夹中创建菜单实体类【Navigate】
+   属性：
+3.创建NavigateMap类，进行配置属性的约束，
+   约束：
+4.然后迁移数据库 update-database
+
+
+5.创建实体权限服务接口 【IEntityPermissionService】
+  bool Authorize<T>(T entity>where T:BaseEntity
+6.创建实体权限服务类，实现接口
+UserManagerDbContext db=new ......();
+ public  bool Authorize<T>(T entity) where T:BaseEntity
+{
+   var roleIds=WorkContext.CurrentUser.Roles.Select(r=>r.ID);
+   return db.EntityPermissions.Any(ep=>ep.EntityName=typeof(T).Name&&
+    ep.EntityID=entity.ID&&roleIds.Contains(ep.RoleID));
+}
+
+7.创建控制器，NavigateController
+  a.在Index页面展示所有菜单
+  b.UserManagerContext db=new ...();  
+     IentityPermissionService entityPermissionService=new ...();
+   public ActionResult Index()
+{
+var currentUserNavigates=    db.Navigate.Where(nav=entityPermissionService.Authorize(nav));//要缓存，不能每次请求，在cokie失效再请求。。
+Navigate nav=db.Navigates.SingleOrDefault();
+
+return view(currentUserNavigates);
+
+8.创建导航Create的action，展示创建页面，输入数据，保存数据
+在展示页面会提示一个错误，意思是需要初始化parent数据，如果不初始化就会抛异常
+
+所以需要初始化：
+this.ViewData["ParentID"] = new SelectList(new List<Navigate>() { new Navigate {
+          
+                Name="顶级菜单",                
+                Active=true,
+            } }, "ParentID", "Name");
+
+9.添加导航信息时，父级导航id parentid  可为null，所以，在传入parentid时一定为null，不能为0，因为给0，ef会查找parentid为0 的数据，没找到
+就会抛出异常，如果选择的父级id不是顶级菜单，其他才级别菜单，可以传入parentid的值，同样去数据库查找该parentid，如果没有同样报错，id一定是
+数据库存在的，因为id是主键，parentid是外键
+
+二、按钮属于操作权限
+扩展linkExtensions【按钮】
+创建扩展文件夹 Extension
+创建HtmlHelpExtensions静态类
+扩展按钮权限。
+将当前的按钮信息传入到扩展类的方法中，通过获取权限列表，查看是否有按钮权限
+
+
+三、
+nfine 系统
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
