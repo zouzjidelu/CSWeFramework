@@ -1,0 +1,145 @@
+﻿一、创建异常项目演示,MVC,[ExceptionSample]
+
+vs-web --》IIS-->应用程序--》操作系统，异常一层一层往上抛，跑到最上层，windos都没处理异常,就发生蓝屏
+
+添加一个类 Sample
+static void Test(string str){
+
+if(string.isnul..(str)){
+throw new argumentnullexception("str";)
+}
+  
+ try{
+  File.Open("c:/...")
+  }
+  catch(fileexption....){
+
+
+  }
+
+  try{
+  sqlcommand =cmd=new ..();
+  cmd.ExcuteNonquery();
+   }  catch(sqlException ex){
+   if(ex.Number==4){
+      
+    }
+  }
+  //查看异常的层次结构 F1查看微软官网的文档
+
+}
+
+
+static void Main(){
+  try{
+    throw new DivideByZeroException();
+}
+catch(DivideByZeroException ex){
+ console.writeliene(string.format("0x{0:X8}",  ex.HResult);
+}
+ }
+
+如果不try-catch，windows系统会捕捉到，不然会蓝屏，在之前的xp系统会经常蓝屏，因为
+没有捕捉异常
+打开事件查看器
+在windows日志，应用程序中可以查看到异常信息
+错误级别，线程，错误位置，等等，
+============================
+请求顺序
+1.访问URL，进入IIS
+2.IIS将请求交给Asp。Net runtime
+3.Asp.net runtime调用mvc框架处理异常
+4.执行控制器action
+5.返回静态网页【404错误】
+
+微软自带的error  FilterConfig中有 filters.add(new handleErrorAttribute())
+,在webconfig中，systeweb节点中将自定义错误页 启用
+<system.web>
+  <customErrors model="On"></custom...>//On【本地当前调试运行，会打印详细信息，如果是服务器上，会打出一些模糊的详细信息，不会打印堆栈】,off[关闭，iis处理]，RemoteOnly【远程请求】
+</..>
+在控制器 action上打上此错误异常标签，出现异常，就会自动跳转到微软的自定义的error页面
+这是微软自带的错误页
+在action上打HandleError可以传入一些参数
+
+[HandleError(View="Error2",Order=3,ExceptionType=typeof(DivideByZeroException))]//Error2是自定义的Error2页面,第二个参数，排序，第三个参数，异常类型，是当前异常类型的才处理
+public actionResult index(){
+}
+可以在Error.cshtml 中接收错误信息
+@model HandleErrorInfo
+
+@Model.ActionName
+@MOdel.ControllerName
+<h2> @string.format(0x{"0:x8}",Model.Exception.HResult </h2>
+
+
+
+在Controler类中有一个 OnException方法，子类可以重写他
+错误处理优先级
+1.action内的try，
+2.ciontroller的OnException
+3.微软自定义的错误处理【也就是在action上标记的HandleError特性】
+4.Gloab中的Aplication_Error(){ }[iis asp.net环境,当前web应用程序]
+5.操作系统
+
+
+gloab 是 ap.net runtime的基础
+mvc aspx webapi webpage ,webform
+
+gloab中的
+public void Application_error(Object sender,EventArgs e){
+Exception exception = Server.GetLastError（）；
+
+}
+
+推荐 http 权威指南书
+
+
+public void Application_Start(){
+HttpStatusCode//可以查看http状态吗
+
+
+}
+
+
+
+
+创建Error控制器 ErrorController
+创建 action及view
+public  ActionResult NotFound(){
+Response.StatusCode=(int)HttpStatusCode.NotFound;//为什么这里要写状态吗？因为返回给客户端这个就代表不在处理后面的代码了，提高效率
+
+return view();
+ }
+第一种：在webconfig中配置错误信息 ，在asp.net的异常处理【只能拦截aspnet中的错误程序】
+<system.web>
+  <customErrors model="On" redirectMode="ResponseRedirect">// redirectMode =“ResponseRedirect” 跳转模式， redirectMode =“ResponseRewrite”//重写页面，可以写静态页面    <error statusCode="404" redirect="/Error/404.html"></error>
+    <error statusCode="404" redirect="/Error/NotFound"></error>
+  </custom...>//On【本地当前调试运行，会打印详细信息，如果是服务器上，会打出一些模糊的详细信息，不会打印堆栈】,off[关闭，iis处理]，RemoteOnly【远程请求】
+</..>
+第二种：iis级别的异常处理 【拦截其他语言的程序，只要部署在iis上】
+<system.webServer>
+  //Custom打开自定义，//existingResponse="Replace"，已经存在的相应，替换，
+<httpErrors errorMode="Custom" existingResponse="Replace">
+  <remove statusCode="404"   />//清理404，因为iis已经注册404，所以要清理
+  //responseMode相应模式，Redirect[跳转，url也会改变，跳转到指定的路径上]，ExcuteURL[执行url，url不改变，直接在当前url下跳转到错误页面]，也可以设置静态的页面
+  <error statusCode="404" path="/Error/NotFound" responseMode="ExcuteURL"></error>
+<../>
+</..>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

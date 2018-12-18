@@ -1,0 +1,88 @@
+﻿上节课将的五种错误处理错误方式
+
+1.在Action 上打HandleError[]标签
+
+2.复写控制器的OnException方法
+ovveride void OnException(){
+
+}
+3.创建一个hCustomandleErrorAttribute：HandleErrorAttribute
+{
+  override void OnException()
+ {
+ 
+  }
+}
+
+4. MvcApplication类中
+
+public void Application_Error(){
+
+}
+
+5.在事件查看器中可以看到错误信息
+
+================
+在github上找到HandleErrorAttribute微软的源代码，
+拷贝下来，看下此类的异常是如何实现的
+
+
+在Action打上CustomandleError标签
+
+启动程序，有错误信息，执行顺序 
+捕捉异常====>CustomandleError====>
+override void OnException====>Application_Error
+
+
+创建异常激活器类
+在web启动的时候执行的类，在nuget上搜索 webactivatorex  install-pacakge ....
+安装此包。装完后，就可以用了
+在namespace上写
+[assembly.WebActivatorEx.PreApplicationStartMethod(typeof(ErrorHandlingActivator),"Start")]
+public  static class ErrorHandlingActivator
+{
+   public static void Start(){
+   
+ DynamicModulUtitylity.RegisterModule(typeof(ErrorHandlingStartupModule));
+   
+  }
+}
+
+//实现httpmodel，http管道模型
+public class ErrorHandlingStartupModule:IHttpModule
+{
+ public void Init(HttpApplication context){
+   context.Error+=Context_Error;
+
+
+ } 
+pubilc void Context_Error(object sender,EventArgs e){
+//异常在这里处理   
+HttpApplication  httpapplication= sender as HttpApplication;
+   Exception exception=httpapplication.Server.GetLastError();
+   HttpException httpException=new ...(null,exception);  
+   if(httpException.GetHttpCode()==(int)HttpStatusCode.NotFound)
+   {
+        httpapplication.Server。ClearError();
+        httpapplication.Response.TrySkipIisCustomErrors=true;
+        httpapplication.Response.Clear();
+        RouteData  routedata=new..();
+        routedata.values.add("controller","error");
+        routedata.values.add("action","notfound");
+        IController errorController=new ErrorController();
+        var httpcontextwrapper=  HttpContextWrapper(httpApplication.Context);
+        var requestContext=new RequestContext(httpcontextwrapper.routeData);
+        errorController.Excute(requestContext);
+      } 
+  }
+
+  public void Disponse(){   }
+}
+
+定义了自己的httpmodule之后，需要在config中配置一下，但是如果代码删掉，就会抛异常，不建议这种方式
+system.web节点下
+<httpModules>
+  <add name="" type ="ErrorHandlingStartupModule" />
+</...>
+
+//在Start方法中写，和untiy的激活器一样
