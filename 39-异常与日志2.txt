@@ -66,9 +66,12 @@ HttpApplication  httpapplication= sender as HttpApplication;
         httpapplication.Server。ClearError();
         httpapplication.Response.TrySkipIisCustomErrors=true;
         httpapplication.Response.Clear();
+
         RouteData  routedata=new..();
-        routedata.values.add("controller","error");
+        routedata.values.add("controller","error");//这里跳转到notfound页，如果是404，也可以跳转到 error页，
+					这里可以做一个跳转，根据状态码跳转到不同的页面，创建的页面要跟状态吗一直，才可判断
         routedata.values.add("action","notfound");
+
         IController errorController=new ErrorController();
         var httpcontextwrapper=  HttpContextWrapper(httpApplication.Context);
         var requestContext=new RequestContext(httpcontextwrapper.routeData);
@@ -82,7 +85,84 @@ HttpApplication  httpapplication= sender as HttpApplication;
 定义了自己的httpmodule之后，需要在config中配置一下，但是如果代码删掉，就会抛异常，不建议这种方式
 system.web节点下
 <httpModules>
-  <add name="" type ="ErrorHandlingStartupModule" />
+  <add name="" type ="ErrorHandlingStartupModule" />//自动注入到管道中
 </...>
 
-//在Start方法中写，和untiy的激活器一样
+//在ErrorHandlingActivator激活器的Start方法中写，和untiy的激活器一样【引用基础结构 microsoft.web.infactructure.DynamicModuleHelper】
+
+public static void start()
+{
+   DynamicModuleUtility.RegisterModule(typeof(ErrorHandlingStartupModule))
+ }
+
+//启动程序，跳转一个存在页面，会发现自动跳转到404页面
+
+自定义个一个错误处理
+public class CustomHandleErrorAttribute:HandleErrorAttribute  ||   FilterAttribute,IExceptionFilter
+{
+  public ovvride void OnException(ExceptionContext filterContext){
+   
+  }
+}
+
+
+nuget Exception   安装微软的异常处理组件，
+    Install-Package EnterpriseLibrary.ExceptionHandling  6.0.1304
+
+创建文件夹Exceptions
+在文件夹下创建 ExceptionHandlingAttribute类
+继承微软的HandleErrorAttribute
+重写 OnException
+
+public class ExceptionHandlingAttribute:HandleErrorAttribute
+{
+  
+      public string ExceptionPolicyName{get;private set;} 
+ 
+     public ExceptionHandlingAttribute(string exceptionPolicyName){
+      this.ExceptionPolicyName=ExceptionPolicyName;
+   }
+
+    public ovveride void OnException(ExceptionContext filterContext){
+  
+  try{ 
+     ExceptionPolicy.HandleException(filterContext.Exception,ExceptionPolicyName);
+   filterContext.ExceptionHandled=true;//说明异常以处理  
+}
+catch(exception e){
+   filterContextExption=ex;
+   base.OnException();
+}
+ 
+   }
+   
+}
+
+
+
+扩展和更新 搜索 enterprise library====此插件是将mvc异常处理。交给次插件处理，此插件可以扩展异常由哪些异常类来处理。以及处理的方式
+处理到哪里。比如写入file中数据库中，发送邮件，等等。。。异常可以由多个处理器来处理
+
+在bings中搜索 EnterpriseLibrary.Config,在配置文件上面右键可以生成企业库
+
+在App_Start文件夹 ，创建企业激活器 EntLibActivtor类
+在namespace上 写[assembly:。。。]
+public static class EntLibActivator{
+  public static void Start(){
+//获得异常配置文件
+ string configFilePath=Path.Combine(appDomain.CurrentDomain,BaseDirectory,"EntLib.config");
+//将配置文件加载到配置元中 
+IConfigurationSource configSoure=new FileConfigurationSource(configSource);
+//将配置源放入异常策略工厂中。
+var exceptionPolicyFactory = new ExceptionPolicyFactory(configSoure);
+//设置异常管理，策略工厂放入一场管理中，启动程序后执行异常处理激活器就会激活
+ExceptionPolicy.SetExceptionManager(exceptionPolicyFactory.CreateManager());
+  }
+}
+
+创建配置文件 EntLib.config ,复制项目中的配置文件
+<configuration>
+  
+</configuration>
+
+
