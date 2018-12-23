@@ -139,9 +139,9 @@ private voide SaveLogEntry(LogEntry logEntry){
 //配置ef数据格式化器
 public class EfFormattedTraceListenerData:TraceListenerData{
 
- private const string formatterNameProperty="formattoer";
+ private const string formatterNameProperty="formatter";
  
-//配置属性
+//配置属性;
 [ConfigurationProperty(formatterNameProperty,IsRequired=false)]
  public string Formatter
  {
@@ -193,13 +193,13 @@ Message=e.Message,
 8.微软的企业库是多线程的，咱们这里写死的，只有一个db，会抛错，如果是servier层，直接依赖注入，即可，不存在此问题
 
 entlib6  下载 企业库
-源代码 ，电子书
+源代码 ，电子书  bing 搜索   enterprise library 6  -April 2013
 
 win10  应用商店      翻译工具  
 搜索 translation
 
 翻译工具
-  Microsoft Edge  Translator For Microsoft Edge
+ 应用商店搜索： Microsoft Edge  Translator For Microsoft Edge
 下载完 关闭浏览器，启动
  选择英文 右键选择翻译， 也可以设置看到英文就翻译
 

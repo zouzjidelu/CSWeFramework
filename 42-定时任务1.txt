@@ -1,0 +1,140 @@
+﻿什么是定时任务？
+在规定的时间内执行任务
+一段脚本？存储过程？一段业务？
+现在流行的任务计划框架很多
+微软是如何做任务计划的？
+
+做下角搜索 任务计划程序 查看微软是如何做的
+
+在没有定时任务之前使用的方式
+timer 
+WebBackgrounder 
+Hangfire
+Quartz
+
+一、新建控制台程序，做一个每隔3s钟执行依次任务
+通过线程的方式实现，如果时间是可变的，可以将秒数配置成配置文件进行执行
+static void Main(string [] args){
+
+方式一：
+Thread thread=new Thread(Test);
+thread.Start();
+
+方式二：
+线程池的线程，得到提升[线程池的线程拿到用完之后放回线程池中，如果需要再次从线程池
+中获取，而上面的Thread是一直占用此线程]
+ThreadPool.QueueUserWorkItem(new WaitCallback(Test));
+
+方式三：【启动一个单独的线程，不会用线程池】
+Timer timer=new Timer(Test);
+timer.Change(0,1000);//延迟时间
+
+Console.ReadKey();
+ 
+}
+static void Test(object obj)
+{
+  while(ture){
+     Console.WriteLine(DateTime.Now);
+     //Thread.Sleep(TimeSpan.FromSeconds(3));
+   }
+}
+
+一个非常灵活的轻量级作业调度框架
+nuget  Quartz.Net 3.0.0-alpha2
+Install-Package Quartz -Pre
+
+往下拉，看一下依赖的引用包
+
+任务三要素：
+1.作业【Job】任务 ---代码？脚本？p处理文件？
+2.触发器【Trigger】具体什么时候干？
+3.调度器【Scheduler】 作业与触发器关联起来。进行监控
+
+===================================
+在nuget上搜索 Quartz.Net 3.0.0、并安装到程序当中
+GreenVPN
+
+创建一个job
+IJobDatail job=JobBuilder.Create<MyJob>().WithIdentity("jbo1","MyJobGroup").Build();//提供标识
+    job.JobDataMap.Add("abc","123");//给job传值
+//触发器
+ITrigger trigger=TriggerBuilder.Create().
+	         WithIdentity("trigger1","triggerGroup").
+                         StartNow().
+                          WithSimpleSchedule(x=>x.WithIntervalInSeconds(5).//5秒执行一次
+                           WithRepeatCount(5)).//重复次数5次，也可以一直执行 .RepeatForever()
+                          Build();
+
+//调度器
+ISchedulerFactory schedulerFacotry=new StdSchedulerFactory();
+IScheduler scheduler=schedulerFacotry.GetScheduler().Result;
+
+scheduler.ScheduleJob(job,trigger);
+scheduler.Start();
+
+
+创建一个MyJob类，继承IJob,实现次接口
+public  class MyJob:IJob{ 
+    public Task  Execute(....  context){
+         context.JobDetail.JobDataMap.Get("abc").Tostring();//获取传入job的值
+
+          console.writeline(datetime.now);
+ 
+         return Task.FromResult(0);
+    }
+}
+
+提供的触发器
+1.每隔多久执行一次，简单的触发器  【WithSimpleSchedule】
+2.日历触发器[WithDailyTimeInterva]
+3.Cron触发器   bings搜索 Cron生成器   cron.qqe2.com 生成自己配置的表达式器 指定的秒数，小时，月，年，等等
+
+ITrigger trigger1=TriggerBuilder.Create().
+	         WithIdentity("trigger1","triggerGroup").
+                         StartNow().
+  WithSimpleSchedule(x=>x.WithIntervalInSeconds(5).//5秒执行一次
+                           WithRepeatCount(5)).//重复次数5次，也可以一直执行 .RepeatForever()
+                          Build();
+
+
+
+ITrigger trigger2=TriggerBuilder.Create().
+	         WithIdentity("trigger2","triggerGroup").
+                         StartNow().
+WithCronSchedule(传入刚才生成的表达式).Build();
+
+
+
+//调度器
+框架以什么样的方式运行
+NameValueCollection props=new ...();
+proprs.Add("","")
+
+ISchedulerFactory schedulerFacotry=new StdSchedulerFactory();
+IScheduler scheduler=schedulerFacotry.GetScheduler().Result;
+HashSet<ITrigger> triggers=new ...();
+triggers.Add(trigger1);
+triggers.Add(trigger2);
+
+scheduler.ScheduleJob(job,triggers,false);
+scheduler.Start();
+
+学习源代码  github quarzt.net
+
+jbo之间可以传值，取值
+
+
+1.定制Q框架的配置系统（.config）
+2.IOC Unity注入工厂
+3.深度继承mvc与CarManager，Job应该写在哪里？
+4.界面，设计并开发界面，管理job，监控job，灵活让最终用户配置job触发器
+
+定时任务可以放在控制台程序，winserver，iis，
+iis和网站的重启是不同的。
+如果网站长时间没人访问，iis会自动回收
+
+可以在高级设置中，设置为不回收 固定时间间隔，
+
+如果job在iis下不执行，在globax文件 start方法中启动定时任务，不会回收
+或者通过设置iis不自动回收
