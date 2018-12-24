@@ -1,0 +1,289 @@
+﻿一、新建项目 mvc  做定时任务  QuartzSample
+二、Install-Package Quarzt -version 3.0.0
+三、在App_Start文件夹创建一个Quartz激活器类，在使用激活器前，需要引用包  查看包 find-package webactivatorex
+       Install-Package WebActivatorEx [web启动、结束之前加载和释放一些东西]
+       创建一个激活器 QuartzActivator
+
+在namespace上打上 
+[assembly WebActivatorEx.PreApplicationStartMethod(QuartzActivator),"Start")]
+[assembly WebActivatorEx.ApplicationShutdownMethod(QuartzActivator),"Shutdown")]
+
+PreApplicationStartMehotd:web启动的时候执行
+Application.ShutdownMethod:web结束的时候执行
+
+
+ public static class QuartzActivator
+{
+private static  IScheduler scheduler;
+    //在web启动的时候激活定时任务框架
+     public static void Start(){
+   ISchedulerFactory schedulerFactory=new ....();
+   scheduler=  schedulerFactor.GetScheduler().Result;
+   //工作
+   IJobDetail job=new JobDetailImpl("myjob1","group1",typeof(object));//JobDetailImpl 和 Jobbuilder是一样的
+   //触发器
+   ITrigger trigger=TriggerBuiler.Create().Build();
+   //调度器
+   scheduler.ScheduleJob(job,trigger);
+  
+   //由于上面的三要素经常变动，如果硬编码写死，不够灵活。
+      可以通过
+       新建Quartz.config  [配置调度器的行为，比如线程池启动多少线程]
+       新建 quartz_jobs.xml【配置的是任务】
+       以上这些名字是固定的，如果有这些配置文件，会默认查找配置文件的配置信息
+     
+     quartz_jobs.xml配置信息可以配置job 、 trigger、
+      
+      scheduler.Start();
+    
+     
+   } 
+   
+   public static void Studown(){
+  
+   }
+}
+
+
+触发器：
+1.SimpleTrigger  每个多长时间触发一次
+2.CronTrigger   表达式方式执行
+3.ICalendar calendal=new CalendarIntervalTrigger  日历触发器
+比如国庆节、元旦节需要执行，
+
+
+====================
+针对Quartz框架的配置 更改框架的原有格式，定义自己的格式，在激活器中读取出来，进行执行
+
+【1.】Quartz.config 配置内配置，拷贝Quartz官网的配置信息即可。在nuget上获取，但是最终会改成自己的配置信息，往下阅读
+
+<configuration>
+   <quartz>
+       <add key="quartz.thredPool.threadCount" value="10" />
+       
+   </quartz>
+</configuration>
+
+在激活器的Start方法中进行读取 quartz.config配置信息
+
+public static void Start(){
+string configurationFilePath= Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"quartz.config");
+
+//配置文件映射
+var configurationFileMap= new ExConfigurationFileMap{ ExConfigFilename=configurationFilePath };
+var configuration=ConfigurationManager.OpenMappedExeConfiguration(configurationFileMap,ConfigurationUserLevel.None);
+//定义xml文档
+System.Xml.XmlDocument sectionXmlDocument=new  ..();
+ sectionXmlDocument.Load(new StringReader(configuration.GetSection("quartz").SectionInfomation.GetRawXml()));//找到xml的quartz节点
+//转换成集合
+NameValueSectionHandler handler=new ...();//微软自带的转换工具handler
+NameValueCollection  props=handler.Create(null,null,sectionXmlDocument.DocumentElement) as NameValueCollection ;
+
+ //将集合放入到调度器中执行
+   ISchedulerFactory schedulerFactory=new ....(props);
+       scheduler=  schedulerFactor.GetScheduler().Result;
+   scheduler.Start();
+}
+
+【2.quartz_job.xml】更改为 Quartz.Jobs.config
+在Quartz.config中配置读取配置文件路径，
+<Add key ="" //日志插件
+<add key>// 如何解析job，通过xml解析器解析
+
+<add key>//如果文件没找到，是否跑错
+<add key>//隔多长时间，扫描jboconfig文件是否改动，如果改动，就把时间调整到最新的
+
+
+更改web配置信息，是否需要重启web？不需要，通过定时扫描config文件
+如果有更改，就更改掉。不需要重启web
+
+
+创建一个Scheduler文件夹，创建SampleJob1、SampleJob2 类 
+在job类中实现Ijob，
+写入自己的逻辑，
+比如写一些debug输出
+
+public task Excute(... context){
+Debug.WriteLine("datetime.no, ");
+return Task.FromResult(0);
+}
+//修改 Quartz.Jobs.config的job 信息，更改为 设置的 SampleJob1、SampleJob2 的信息，配置到config中
+运行web站点，查看是否执行任务，在输出窗口 查看是否 打印debug信息
+
+测试，动态修改 quartz.jobs.config中的trigger 中的执行秒数，
+在指定的秒数过后自动去扫描config信息是否改变，如果改变是否生效
+比如120s扫描依次config文件，在config文件由之前三秒执行依次任务，改为1秒
+过120s之后，查看是否更改为1s执行一次任务。
+
+
+在config中配置job值，在SampleJob1类中获取配置文件的job值
+在quartz.jobx.config中配置
+
+<schedule>
+  <job>
+     <job-data-map>   
+         <entry>
+             <key>myTest></key>
+            <value>this is xxx</value>
+         </enrty>
+     </job-data-map>
+  </job>
+</schedule>
+
+在SampleJob1类中获取
+
+var value=context.JobDetail.JobDataMap.GetSTring("myTest");
+
+
+job实现业务。。在service层都是实现接口的
+这里举个例子，
+创建一个Service文件夹
+创建 IDataService.cs 接口
+    创建业务方法
+    DateTime GetNowDateTime();
+创建默认实现服务  DefaultDateService:IDataService,实现服务
+
+如果在job中用到服务如何做？
+
+在SampleJob2l类的Excuete方法中使用
+
+IDateService service=new DefaultDataService();
+service.GetNoDataTime();
+
+这样不够灵活，把具体的实现服务写在了job中，job也应该依赖于依赖注入
+通过配置文件的方式读取 所以需要更改
+
+第一步
+在SampleJob2的构造函数中，注入 IDataService,这样就没有在job类中依赖具体的服务,而是通过unity容器来传入具体的服务
+
+private readonly IDataService dataService;
+public  SampleJob2(IDataService dataService)
+{
+this.dataService=dataService;;
+}
+
+第二步，使用以来容器，需要引入unity
+Install-Package unity.mvc5  5.1.2.3
+
+跟mvc一样的  安装完会生成一个UnityConfig类
+
+在RegisterComponents方法中配置
+
+创建一个ServiceContainer 类将之前的carmanager的代码拷贝过来
+
+public static void RegisterComponents(){
+
+  //可以在配置文件实现 
+   ServiceContainer.Current.RegisterType<IDataService,DefaultDataService>();
+}
+
+创建一个UnityActivator激活器 ,写一个开始结束的方法，激活unity即可，结束时，回收unity
+public static void start()
+{
+ UnityConfig.RegisterComponenets();
+}
+
+public static void shutdown()
+{
+ServiceContainer.Current. Disponse();
+}
+
+
+创建job的方式改变
+一、创建扩展文件夹  Extensions
+二、创建UnityJobFactory类继承SimpleJobFactory
+private readonly IUnityContainer container;
+public UnityJobFactory(IunityContainer container){
+this.container=container;
+ }
+public override  IJob NewJob(...bundle,... scheduler){
+  IJobDetail jobDetail=bundle.JobDetail;
+  Type jobType =jobDetailJobType;
+ty{
+//先从容器中拿，如果能转换成IJob就从容器拿，如果不能转换就调用父类的NewJob通过反射的方式获取
+return container.Resolve(jobType) as IJob??base.NewJob(bundle,scheduler);
+}
+catch(exception e)
+{
+  SchedulerException se=new ....("..."+jobDetail.JobType.Full);
+  throw e;
+ }
+}
+
+
+三、在扩展文件夹 添加调度器的工厂
+pubilc   UnitySchedulerFactory:StdSchedulerFActory{
+
+构造函数中 构造  UnityJobFactory unityJobFactory 
+public  UnitySchedulerFactory ( UnitySchedulerFactory  unityJobFactory,NameValueCollection props=null)
+{
+  if(null!=props){
+   base.Initialize(props);
+  }
+this unityJobFactory=unityJobFactory;
+}
+public  override IScheduler Instantiate(...rsrcs,....qs){
+
+  scheduler.JobFactory=this.unityJobFactory;
+   
+  return base.Instantiate(rsrcs,scheduler);
+
+}
+
+}
+
+unity扩展
+unity初始化，注入一些东西
+public class QuartzUnityExtension:UnityContainerExtension
+{
+给用户提供一些属性
+ private readonly  NameValueCollection quartzProps;
+public QuartzUnityExtension(NameValueCollection quartzProps){
+this.quartzProps=quartzProps;
+}
+
+public   override void Initialize(){
+//构造函数注入
+var constructor=new InjectionConstructor(new UnityJobFactory(this.Container),new InjectionParameter<NameValueCollection>());
+
+//注册调度器工厂
+this.Container.RegisterType<ISchedulerFactory,UnitySchedulerFactory>(new ContainerControlledLifetimeManager(),constructor);
+//从工厂中拿到一个调度器，结果
+this.Container.RegisterType<IScheduler>(new InjectionFactory(c=>c.Resolve<ISchedulerFactory>().GetScheduler().Result));
+ }
+}
+
+在QuartzActivator激活器中的de Start方法中，将 调度器工厂不写死，改为动态获取
+
+ //在当前容器中添加一个扩展，针对unity的扩展 QuartzUnityExtension
+ServiceContainer.Current.AddExtension(new QuartzUnityExtension(props));
+ServiceContainer.REsolve<IScheduler>()Start();
+
+
+在Studown方法中释放untiy容器对应的调度器xinxi
+public static void Shutdown(){
+ServiceContainer.Resolve<IScheduler>().Shutdown();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
