@@ -27,7 +27,7 @@ public void Application_Error(){
 拷贝下来，看下此类的异常是如何实现的
 
 
-在Action打上CustomandleError标签
+在Action打上CustomHandleError标签
 
 启动程序，有错误信息，执行顺序 
 捕捉异常====>CustomandleError====>

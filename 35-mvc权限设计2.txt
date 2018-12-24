@@ -96,6 +96,6 @@ base.HandleUnauthorizedRequest(filtercontext);
 }
 }
 
-7.在Action上打 ActionAuthorizeAttribute标签，标签中写入有权限的name,多个就以逗号隔开，即可
+7.在Action上打 ActionAuthorizeAttribute标签，标签中写入有权限的name,多个就传入一个字符串数组，即可
 
 
