@@ -4,7 +4,7 @@
 现在流行的任务计划框架很多
 微软是如何做任务计划的？
 
-做下角搜索 任务计划程序 查看微软是如何做的
+电脑左下角开始中 搜索 任务计划程序 查看微软是如何做的
 
 在没有定时任务之前使用的方式
 timer 
@@ -86,7 +86,7 @@ public  class MyJob:IJob{
 }
 
 提供的触发器
-1.每隔多久执行一次，简单的触发器  【WithSimpleSchedule】
+1.每隔多久执行一次，总共执行几次 简单的触发器  【WithSimpleSchedule】
 2.日历触发器[WithDailyTimeInterva]
 3.Cron触发器   bings搜索 Cron生成器   cron.qqe2.com 生成自己配置的表达式器 指定的秒数，小时，月，年，等等
 
