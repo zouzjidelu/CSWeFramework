@@ -1,0 +1,157 @@
+﻿
+entlib6  下载 企业库
+源代码 ，电子书
+
+win10  应用商店      翻译工具  
+搜索 translation
+
+翻译工具
+  Microsoft Edge  Translator For Microsoft Edge
+下载完 关闭浏览器，启动
+ 选择英文 右键选择翻译， 也可以设置看到英文就翻译
+
+============================================
+在异常信息中，需要知道具体的Controller，Action存入到数据库中
+可以通过扩展属性的方式记录下来，是一个字典的形式
+在LogEntry对象中有一个属性
+
+Logger.Write(new LogEntry(){
+
+ExtendedProperties=new Dictionary<string,object>(){
+{"Controller":ControllerContext.RouteData.GetRequiredString("controller")},
+{"Action":ControllerContext.RouteData.GetRequiredString("action")},
+{"Exception",e}
+}
+})
+
+运行程序，在trycatch中记录日志，查看错误信息中，会发现记录的信息中，有具体的控制器、action、异常等具体信息
+
+
+是否可以异常出现后，自动记录日志？
+
+在Exceptions文件夹下创建一个日志处理器 LoggingHandler
+实现接口IExceptionHandler
+
+public class LogginHandler:IExceptionHandler
+{
+private readonly string title;
+private readonly Type formatterType;
+ public LoggingHandler(string title,Type formatterType){
+  
+  title=title;
+    formatterType=formatterType;
+}
+
+  //自定义的日志handle数据 处理
+[ConfigurationElemenType(typeof(LoggingHandlerData))]
+public Exception HandleException(Exception exception,Guid handlingInstanceId)
+{
+  var entry=new LogEntry(exception.Message,"General",0,100,TraceEventType.Error,"发生错误",null);
+  foreach(DictionaryEntry dataEntry in exception.Data){
+     
+   if(dataEntry.Key is string){
+  
+   entry.ExtendedProperties.Add(dataEntry.Key as string , dataEntry.Value)  
+ }
+  
+ }
+
+//拿到格式化器
+Type [] types=new Type[]{typeof(TextWriter),typeof(Exception),typeof(Guid)}
+ConstructiorInfo constructor=formatterType.GetConstructor(types);
+using (StringWriter writer=new StringWriter()){
+//获得格式化器字符串，
+ var exceptionFormatter=(ExceptionFormatter)constructor.Invoke(new object[]{writer,exception,handlingInstanceId})
+  exceptionFormatter.Format();
+entry.ExtendedProerties.Add("Exception",writer.GetStringBuilder().Tostring())
+
+}
+Logger.Write(entry);
+
+return exception;
+
+}
+}
+
+在EntLib.config中配置一场处理器中，如果发生了异常记录日志
+将日志处理器写入 ，以及日志处理器自定义的配置属性title,
+<exceptionHandlers>
+ <add name = "LogginHandler" type="命名空间.LoggingHandler,命名空间"   title="计算异常" ， formatterType=""  / >
+<.../>
+
+创建 日志handeler处理 自定义自己的日志处理节
+public class LoggingHandlerData:ExceptionHandlerData
+{
+//类型转换器  把config中配置的type属性中的字符串，转换成类型，返回
+private static readonly AssemblyQualifiedTypeNameConverter typeConverter=new ...();
+  //指定title
+  private const string title="title";
+//格式化类型
+  private const string formatterType="formatterType";
+
+[ConfigurationProperty(title,isRequired=false)]
+  public string Title{
+  
+  get{return (string)this[title];}  
+set{this[title]=value;}
+
+  }
+   public override  IExceptionHandler BuildExceptionHandler(){
+   return new LoggingHandler(); 
+  }
+}
+
+[ConfigurationProperty(formatterType,isRequired=true)]
+public string FormatterTypeName{
+  get{return typeConverter}
+ set{this[formatterType]=value;}
+ 
+ }
+
+public Type FormatterType{
+ get[return (Type)typeConverter.ConvertFrom(FormatterTypeName);]
+set[this[formatterTypeName]=typeConverter.ConvertToString(value);]
+}
+
+在EntConfig中查看配置信息
+对异常信息 处理后不进行抛出异常  postHandlingAction="None"
+
+
+
+写两个action，
+一个尝试除以零的异常
+一个参数错误的异常
+
+错误出现后，希望提示给用户错误信息
+创建一个action
+public ActionResult OnIndexError()
+{
+   return json(id=-1,name="text",JsonREquestBehavior.AllowGet);
+}
+
+在ExceptionHandlingAttribute类中的OnException方法中，
+获得action名字，组装 erroraction 名字
+
+
+//跳转到错误处理action中去
+string actionName=filtercontext.RouteData.GetRequiredString('action')
+string errorAction=string.Format("On{0}Error",actionName);
+Controller controller=filterContext.Controller as Controller;
+//调用处理错误action中去
+if(controller!=null&&controller.ActionInvoker.InvokeAction(filtercontext,errorAction)){
+  filterContext.ExceptionHandled=true;
+}
+
+//也可以根据错误码，跳转到不同的错误页面去，在 App_Start文件夹下的ErrorHandlingStartupModule类中实现了，
+根据不同的错误码，跳转到不同的页面中去
+
+页面跳转直接显示html代码，没有渲染页面
+
+
+
+
+
+
+
+
+

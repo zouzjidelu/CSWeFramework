@@ -6,7 +6,7 @@
 ovveride void OnException(){
 
 }
-3.创建一个hCustomandleErrorAttribute：HandleErrorAttribute
+3.创建一个CustomandleErrorAttribute：HandleErrorAttribute
 {
   override void OnException()
  {
@@ -66,9 +66,12 @@ HttpApplication  httpapplication= sender as HttpApplication;
         httpapplication.Server。ClearError();
         httpapplication.Response.TrySkipIisCustomErrors=true;
         httpapplication.Response.Clear();
+
         RouteData  routedata=new..();
-        routedata.values.add("controller","error");
+        routedata.values.add("controller","error");//这里跳转到notfound页，如果是404，也可以跳转到 error页，
+					这里可以做一个跳转，根据状态码跳转到不同的页面，创建的页面要跟状态吗一直，才可判断
         routedata.values.add("action","notfound");
+
         IController errorController=new ErrorController();
         var httpcontextwrapper=  HttpContextWrapper(httpApplication.Context);
         var requestContext=new RequestContext(httpcontextwrapper.routeData);
@@ -82,7 +85,105 @@ HttpApplication  httpapplication= sender as HttpApplication;
 定义了自己的httpmodule之后，需要在config中配置一下，但是如果代码删掉，就会抛异常，不建议这种方式
 system.web节点下
 <httpModules>
-  <add name="" type ="ErrorHandlingStartupModule" />
+  <add name="" type ="ErrorHandlingStartupModule" />//自动注入到管道中
 </...>
 
-//在Start方法中写，和untiy的激活器一样
+//在ErrorHandlingActivator激活器的Start方法中写，和untiy的激活器一样【引用基础结构 microsoft.web.infactructure.DynamicModuleHelper】
+
+public static void start()
+{
+   DynamicModuleUtility.RegisterModule(typeof(ErrorHandlingStartupModule))
+ }
+
+//启动程序，跳转一个不存在页面，会发现自动跳转到404页面，如果是一个异常页面，需要跳转到500错误页，但是这个需要手动配置，根据错误代码，跳到不同的页面，在
+ErrorHandlingStartupModule中修改action名称，通过枚举值获得枚举对应的名称。，然后在Error控制器，创建对应的action即可，实现自动跳转
+         RouteData routeData = new RouteData();
+            string actionName = Enum.GetName(typeof(HttpStatusCode), httpException.GetHttpCode());
+            routeData.Values.Add("Controller", "Error");
+            routeData.Values.Add("Action", actionName);
+            routeData.Values.Add("msg", exception);
+
+
+自定义个一个错误处理
+public class CustomHandleErrorAttribute:HandleErrorAttribute  ||   FilterAttribute,IExceptionFilter
+{
+  public ovvride void OnException(ExceptionContext filterContext){
+   
+  }
+}
+
+
+
+nuget Exception   安装微软的异常处理组件，
+    Install-Package EnterpriseLibrary.ExceptionHandling  6.0.1304
+
+创建文件夹Exceptions
+在文件夹下创建 ExceptionHandlingAttribute类
+继承微软的HandleErrorAttribute
+重写 OnException
+
+public class ExceptionHandlingAttribute:HandleErrorAttribute
+{
+  
+      public string ExceptionPolicyName{get;private set;} 
+ 
+     public ExceptionHandlingAttribute(string exceptionPolicyName){
+      this.ExceptionPolicyName=ExceptionPolicyName;
+   }
+
+    public ovveride void OnException(ExceptionContext filterContext){
+  
+  try{ 
+     ExceptionPolicy.HandleException(filterContext.Exception,ExceptionPolicyName);
+   filterContext.ExceptionHandled=true;//说明异常以处理  
+}
+catch(exception e){
+   filterContextExption=ex;
+   base.OnException();
+}
+ 
+   }
+   
+}
+
+
+
+扩展和更新 搜索 enterprise library====此插件是将mvc异常处理。交给次插件处理，此插件可以扩展异常由哪些异常类来处理。以及处理的方式
+处理到哪里。比如写入file中数据库中，发送邮件，等等。。。异常可以由多个处理器来处理
+
+在bings中搜索 EnterpriseLibrary.Config,在配置文件上面右键可以生成企业库 
+搜索后发现有EnterpriseLibrary.Config - Visual Studio Marketplace字样的连接点开
+跳转到此页面，https://marketplace.visualstudio.com/items?itemName=patternsandpractices.EnterpriseLibraryConfig
+下载安装后，有一个控制台的程序。安装后，可以创建对应的异常、日志、等等配置信息，将配置信息拷贝到项目中的config中即可，config可以新建一个企业库config
+或者找到企业库6的下载连接也可以【Microsoft Enterprise Library 6 】  https://www.microsoft.com/en-us/download/details.aspx?id=38789
+点击下载，选择  
+EnterpriseLibrary6-binaries.exe 下载即可。打开文件读取txt文件夹说明，运行一个ps1的脚本，再次安装，即可
+
+
+
+在App_Start文件夹 ，创建企业激活器 EntLibActivtor类
+在namespace上 写[assembly:。。。]
+public static class EntLibActivator{
+  public static void Start(){
+//获得异常配置文件
+ string configFilePath=Path.Combine(appDomain.CurrentDomain,BaseDirectory,"EntLib.config");
+//将配置文件加载到配置元中 
+IConfigurationSource configSoure=new FileConfigurationSource(configSource);
+//将配置源放入异常策略工厂中。
+var exceptionPolicyFactory = new ExceptionPolicyFactory(configPath);
+//设置异常管理，策略工厂放入一场管理中，启动程序后执行异常处理激活器就会激活
+ExceptionPolicy.SetExceptionManager(exceptionPolicyFactory.CreateManager());
+  }
+}
+
+创建配置文件 EntLib.config ,复制使用工具创建的异常config，到配置文件中
+<configuration>
+  
+</configuration>
+
+最后异步，需要将FilterConfig中替换微软自带的异常处理handle
+    filters.Add(new HandleErrorAttribute());  改为 filters.Add(new HandleErrorAttribute()); 
+
+
+
+

@@ -1,0 +1,221 @@
+﻿企业库配置文件，单独配置 EntLib.config
+
+一、实现记录日志的功能
+讲日志，看微软的日志表的设计，entlib.codeplex.com
+
+1.添加ef package Install-package EntityFramework
+2.添加文件夹DataAccess
+3.文件夹下添加ef上下文  ExceptionSampleContext:DbContext
+4.静态构造函数 内初始化数据库器，数据库不存在，就创建，指定数据库上下文
+5.构造函数中base数据库连接字符串名字
+6.
+7.重写 OnModelCreateing方法
+  方法内，
+  转换器 移除复数  --usingsystem.data.entity.modelconfiguration.Conventions
+  配置将进来，添加的是哪个程序集？当前程序的程序集
+8.在dataaccess文件夹下创建一个log类
+   属性有：
+   日志编号    int ID {get;set;}
+    日志优先级  int Priority
+    错误级别 string Serverity  信息？启动？异常？
+    附加标题  string title
+    日志日期    datetime Time{get;..}
+    机器名 string MachineName[以后可以做分布式，定位哪个机器发生的错误，记录的日志]
+    归档名称（User,Data...） string   Categories  [盘古分词，抓取关键词]检索库，方便
+    应用程序域  string AppDomainName
+    进程编号  string ProcessID
+    进程名字  string ProcessName [qq||微信等等]
+    线程编号 string ThreadId
+    消息     string Message
+    日志详情  string  FormattedMessage
+9.添加LogMap类，对每个字段进行说明
+   LogMap:EntityTypeconfiguration<Log>
+
+10.在配置文件配置数据库连接字符串
+11.启动迁移 Enable-Migrations、迁移文件改成true，再执行 update-database,
+
+二、微软的日志出来讲解
+跟异常的处理模块是一样的，任何地方在调用日志处理器，根据配置文件配置的规则，记录到不同的地方去
+，现在做的是记录在数据库，log4不能做分布式，微软的企业库做为扩展，企业库的
+系统日志处理，
+
+1.nuget 搜索 exception ，找到  企业库日志版本。除了日志库还有异常库，
+   Install-Package EnterpriseLibrary.Logging  6.0.1304
+会有三个dll
+a.Microsoft.Practices.EnterpriseLibrary.Common
+b.Microsoft.Practices.EnterpriseLibrary.ExceptionHandling
+c.Microsoft.Practices.EnterpriseLibrary.Loggin
+b.c依赖于a，b在第二节课讲企业库异常时已经添加
+
+可以将日志发送到哪个数据库、哪个服务器都可以。也可以扩展他，
+如何把日志与架构解耦，日志在任何地方都可以用到他。企业库可能出现在任何一层
+拿到日志记录器，记录的设备有 txt database server[wcf]
+记录到的位置(txt database server[wcf])，格式【xml,json] 的配置
+
+在car框架中，日志记录还是要走server层，做依赖注入，抽象，
+2.创建Logging文件夹
+3.自定义一个日志监听器【ef日志监听器】，在car框架就是server日志监听器
+   创建EfFormattedTraceListener 类  ef监听器
+   引用企业库日志、格式化器、监听器
+  public class EfFormattedTraceListener:FormatedTraceListenerBase
+{
+
+
+public  EfFormattedTraceListener(ILogFormatter logFormatter){
+this.Formatter=logFormatter;
+ }
+
+  //注入ef，在carmanager里面是注入server
+  ExceptionSampleContext db=new ...();
+  override void Write(string message){
+      //  var logs =db.Set<Log>();
+         //如果是car server就调用服务
+   // var log=new LogEntry();
+     //日志扩展属性，
+      // log.ExtendeProperties.Add("ControllerName",);
+        //Logger.Write();
+
+//如果是carmagager这里需要注入服务，
+ SaveLogEntry(new LogEntry{
+  EventId=0,
+ Priority=5,
+ Severity=TraceEventType.Infomation,
+ TimeStamp=DateTime.Now,
+ Message=message
+    
+  })
+        
+  }
+
+  //适合做文本记录换行，ef数据库不适合，故，直接抛出异常 
+  override void WriteLine(string message){
+  //不支持的异常。
+    throw new NotSupportedException();
+   或者不实现的异常
+   或者调用上面的方法
+
+ }
+
+ override traceData(eventCache,source,eventtype,id ){}
+   过滤器==null，说明没有设置过滤器,或者写了，
+       if(this.Filter==null|| this.Filter.ShouldTrace(eventCache,source,eventType,id,null,null,data,null))
+{ 
+    if(data isLogEntry){
+   
+    SaveLogEntry(data as LogEntry);
+    }
+  else if(data is string){
+    
+    Write(data as string);
+   }
+   
+   base.TraceData(.....);
+  }
+}
+
+private voide SaveLogEntry(LogEntry logEntry){
+ 
+   var logs =db.Set<Log>();
+   //这里可以用映射器
+    logs.add(new Log{
+     Priority=logEntry.Priority,
+    AppDomainName=logEntry.AppDomainName,
+    Categories=string.josin(",",logEntry.CategoriesStrings),
+    MachineName=logEntry.MachingName,
+    Message=...Message;
+    ProcessID=...ProcessId
+   Processname=..ProcessName,
+   Severity=...LoggedSeverity
+  ThreadId=...Win32ThreadId,
+  Title=log..Title,
+  Timestamp=lo...TimeStamp.ToLocalTime(),
+   FormattedMessage=Formatter?.Format(logEntry)
+   
+   })
+ db.SaveChanges(); 
+ }
+
+4.创建 ef数据格式器数据 EfFormattedTraceListenerData:TraceSourceData
+//配置ef数据格式化器
+public class EfFormattedTraceListenerData:TraceListenerData{
+
+ private const string formatterNameProperty="formatter";
+ 
+//配置属性;
+[ConfigurationProperty(formatterNameProperty,IsRequired=false)]
+ public string Formatter
+ {
+ get{ return (string) base[formatterNameProperty]; }
+ set{ base[formatterNameProperty]=value; }
+ }
+
+protected override TraceListener  CoreBuildTraceListener (){ 
+  var formatter=this.BuildFormatterSafe(settings,this.Formatter);
+  return new EfFormattedTraceListenerData(formatter);
+ }
+
+}
+ 
+5.在企业库config中配置日志信息
+
+<configSections>
+   <exceptionHandling>..</..>
+   <loggingConfiguration></..>
+</...>
+
+<exceptionHandling>..</..>
+<loggingConfiguration tracingEnabled="true,跟踪允不允许" ></..>
+
+6.在 上节课讲的EntLibActivator 激活器中配置日志，之前配置了异常
+
+
+LogWriterFactory logWriterFactory=new ...(configSoure);
+Logger.SetLogWriter()logWriterFactory.Create();
+
+7.测试
+Home /INdex
+
+try
+{
+
+}
+catch( Exception e){
+ Logger.Write(new LogEntry{
+ Severity=TraceEventType.Error,
+Message=e.Message,
+ Title="计算异常",
+  Categories=new string [] {“计算”，“服务”}
+  
+
+ })
+ }
+
+8.微软的企业库是多线程的，咱们这里写死的，只有一个db，会抛错，如果是servier层，直接依赖注入，即可，不存在此问题
+
+entlib6  下载 企业库
+源代码 ，电子书  bing 搜索   enterprise library 6  -April 2013
+
+win10  应用商店      翻译工具  
+搜索 translation
+
+翻译工具
+ 应用商店搜索： Microsoft Edge  Translator For Microsoft Edge
+下载完 关闭浏览器，启动
+ 选择英文 右键选择翻译， 也可以设置看到英文就翻译
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

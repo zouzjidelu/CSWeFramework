@@ -69,7 +69,7 @@ public actionResult index(){
 
 @Model.ActionName
 @MOdel.ControllerName
-<h2> @string.format(0x{"0:x8}",Model.Exception.HResult </h2>
+<h2> @string.format(0x{"0:x8}",Model.Exception.HResult </h2> //可以将错误码拿到到微软官网查看具体错误异常引起的信息
 
 
 
