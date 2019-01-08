@@ -1,0 +1,167 @@
+﻿一、引入依赖注入unity包
+app.config
+配置文件强制加载智能提示
+github上找到 unity 源码，搜索 xsd源码
+拷贝一份，在项目中新增一个xml架构项，命名为unityxsd
+然后讲拷贝的代码粘贴到xsd中
+写完之后,就会有提示了。如果还没有，就选择xml工具栏，添加架构即可
+
+二、新建类库 Service
+1.添加接口 IDataService，获得日期的功能 GetDateTime()
+2.添加实现接口的类 ChinaDataService
+
+依赖注入解决的重点就是实现的接口，依赖
+
+三、在Programs类中
+实例化一个 ChinaDataService（）；
+会发现代码写死了，需要通过容器来管理，
+在配置文件中注册，注册的类型【Type】是什么，映射到哪里【mapTo】
+
+初始化unity容器
+从容器中解析 IDateService();
+IUnityContainer unityContainer=new UnityContainer();
+unityContainer.LoadConfiguration();//可以写一个方法加载配置文件
+IDateService dataService=unityContainer.Resolve<IDateService>();
+//实现要给美国版本的时间获取。，只需要更改容器中的映射即可
+
+
+1.可以在config中配置多个容器，并指定容器名字
+
+2.可以在同一个容器中注册多个接口【添加的接口不能重复，并可以指定名称】
+    在解析对象的时候，同样需要指定解析的接口名字。
+
+3.可以多个配置文件合成一个配置文件
+创建一个Unity1.config，Unity2.Config
+是否可以将多个配置文件都加载到项目中
+
+比如一个产品的config 订单的config，用户的config等等
+然后在加载的时候，
+首先找到文件路径，当然也可以找到以unity结尾的config，在创建一个untiyconfig时需要有一个统一的规定才行，
+   这里就不这么做了
+
+获得执行配置文件映射
+var file1Map=new ExeConfigurationFileMap(){ExeConfigFilename=“unity1”}
+var file2Map=new ExeConfigurationFileMap(){ExeConfigFilename=“unity2”}
+打开映射执行配置
+var config1=ConfigurationManagerOpenMappedExeConfiguration(file1,Map,ConfigurationUserLevel.no);
+找到unity配置节点
+var sesion1=(UnityConfigurationSection)config1.GetSection("unity");
+var sesion2=(UnityConfigurationSection)config1.GetSection("unity");
+container.LoadConfiguration(sesion1).LoadConfiguration(sesion2)；
+
+=======生命周期的配置================
+<container>
+<register>
+<lifetime type="singleton">//配置生命周期，要指定一个类型。比如单例
+
+解析两个事例，
+断言一下，查看是否是同一个实例
+if(dateService1.GetHashCode()==....2.GetHashCode()){
+cw("同一个对象")
+}else{
+不是同一个对象
+}
+
+单例
+多例【默认多例】
+多线程
+扩展
+层级
+http请求的生命周期
+
+自定义自己的生命周期，实现生命周期管理类即可，博客园一大堆，
+
+
+=======================构造函数注入=============
+//注入字符串，也可以注入对象
+<container>
+<register>
+<constructor name="formatter" value="yyyy-mm-dd">
+ <param>
+</constructor>
+</register>
+</container>
+
+创建一个格式化器提供者IFormatterProvider
+从哪里获取不知道，比如从配置文件
+AppConfigFormtterProvider:IFormatterProvider
+实现 GetFormatterString(){
+
+return  configurationManager.AppSettings["dateFormatterString"];
+}
+
+在配置文件中配置问
+《appsettings>
+<add key ="dateFormatterString" value="yyyy-MM-dd HH:mm:ss"
+</..>
+
+格式化器可能从配置文件获取，也可以自定咦要给
+那么在配置文件配置时，就需要指定格式化器名字
+也可以在构造函数中注入的时候，指定注入的名字是什么，
+构造函数注入一个空的，但是必须指定type，类型，
+
+==========属性注入======
+
+
+public IFormatProvider FormatterProvider{get;set;}
+
+
+<container>
+<register>
+<property name="FormatterProvider" value=""></property>
+ <param>
+</constructor>
+</register>
+</container>
+
+=====方法注入=====
+
+===构造函数 参数可选的
+
+<container>
+<register>
+
+<constructor>
+ <param name="formatterprovider">
+
+</param>
+</constructor>
+</register>
+</container>
+=======外部注入
+
+=======泛型
+配置文件配置泛型
+<register type="Service.ICalculator[].Service" mapTo="Service.ICalculator.Service"> //<register type="ICalculator[,,]"> 逗号代表参数类型的个数,如果一个参数就不需要逗号
+</register>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

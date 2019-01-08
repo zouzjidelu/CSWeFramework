@@ -54,14 +54,21 @@ private static  IScheduler scheduler;
 
 ====================
 针对Quartz框架的配置 更改框架的原有格式，定义自己的格式，在激活器中读取出来，进行执行
+名字是固定的，必须叫这个名字，这样，会默认去执行config的配置信息，也可以修改自己的config名字，需要手动获取
+并加载config信息
 
-【1.】Quartz.config 配置内配置，拷贝Quartz官网的配置信息即可。在nuget上获取，但是最终会改成自己的配置信息，往下阅读
+【1.】Quartz.config 配置内配置，拷贝Quartz官网的配置信息即可。在nuget上获取，
+      但是最终会改成自己的配置信息，往下阅读
 
 <configuration>
-   <quartz>
-       <add key="quartz.thredPool.threadCount" value="10" />
-       
-   </quartz>
+ <quartz>
+    <add key="quartz.plugin.triggHistory.type" value="Quartz.Plugin.History.LoggingJobHistoryPlugin"/>//框架出错了，写日志，日志写在哪里。之前的有企业库日志，可以集成进来
+    <add key="quartz.plugin.jobInitializer.type" value="Quartz.Plugin.Xml.XMLSchedulingDataProcessorPlugin"/>//如何解析job？通过xml解析器解析
+    <add key="quartz.plugin.jobInitializer.fileNames" value="~/quartz.jobs.config"/>//通过xml解析，路径是这个
+    <add key="quartz.plugin.jobInitializer.failOnFileNotFound" value="true"/>//如果配置文件没找到怎么办？是否报错？true：false
+    <add key="quartz.plugin.jobInitializer.scanInterval" value="120"/> //隔多久时间扫描一次job文件，如果有改动，就重新附加给job，120扫描一次config，并且不会重启
+       //具体的配置可以查一下文档  查 这个：quartz.plugin.triggHistory.type
+  </quartz>
 </configuration>
 
 在激活器的Start方法中进行读取 quartz.config配置信息
@@ -95,7 +102,7 @@ NameValueCollection  props=handler.Create(null,null,sectionXmlDocument.DocumentE
 
 
 更改web配置信息，是否需要重启web？不需要，通过定时扫描config文件
-如果有更改，就更改掉。不需要重启web
+如果有更改，就替换成最新的配置信息。不需要重启web
 
 
 创建一个Scheduler文件夹，创建SampleJob1、SampleJob2 类 
@@ -163,18 +170,19 @@ this.dataService=dataService;;
 }
 
 第二步，使用以来容器，需要引入unity
-Install-Package unity.mvc5  5.1.2.3
+Install-Package unity.mvc5  1.2.3
 
 跟mvc一样的  安装完会生成一个UnityConfig类
 
 在RegisterComponents方法中配置
 
 创建一个ServiceContainer 类将之前的carmanager的代码拷贝过来
-
+在unityconfig类中 创建此方法。
 public static void RegisterComponents(){
 
   //可以在配置文件实现 
    ServiceContainer.Current.RegisterType<IDataService,DefaultDataService>();
+
 }
 
 创建一个UnityActivator激活器 ,写一个开始结束的方法，激活unity即可，结束时，回收unity
@@ -215,7 +223,7 @@ catch(exception e)
 pubilc   UnitySchedulerFactory:StdSchedulerFActory{
 
 构造函数中 构造  UnityJobFactory unityJobFactory 
-public  UnitySchedulerFactory ( UnitySchedulerFactory  unityJobFactory,NameValueCollection props=null)
+public  UnitySchedulerFactory ( UnityJobFactory  unityJobFactory,NameValueCollection props=null)
 {
   if(null!=props){
    base.Initialize(props);

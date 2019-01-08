@@ -1,0 +1,149 @@
+﻿上节课问题：
+1.Quartz 部署在iis上之后，有时候会中断，发布上去之后，不会执行，也不会报错
+自动任务部署，和平常网站发布一样。发布完成之后，iis空闲之后会停止的问题
+在iis 找到网站应用程序池，正在回收点一下，会发现有一个固定的时间间隔，到了时间就
+会释放掉了，如果xx分钟之内没有访问，就会终结掉了。有时候希望部署在网站上去之后
+要么设置长一点，要么禁止每隔多少分钟休眠，
+
+在高级设置中 回收目录下 有回收时间设置，已经是否进之睡眠状态的设置
+
+2.如果自动任务不执行的话。如果收到了错误日志，日志没有记录，是看不到的
+如何将job的更改，持久化的技术本当中去。并且Quartz.jobs需要设置权限
+右键属性， IIS，和network角色设置为完全控制即可。job也就会继续执行
+
+跟踪Quartz框架需要日志，Quartz框架具体做了什么事情，需要监控看到具体操作
+这个可以跟企业库的日志 联合起来，
+
+
+
+需要注意的是，在上节课中注入的DataService生命周期不能设置为http内唯一，应该是单例的，是对的个http内唯一，会抛错
+因为线程是从线程是拿的，不是唯一的，
+将IDataService 从unity获取需要设置为单例，或者多例，不能是多例，因为是从线程内获取的
+
+
+在上节课的代码打开，在Extensions文件夹创建一个CustomLogProvider类，并实现ILogProvider
+并实现方法
+
+public  class CustomLogProvider:ILogProvider
+{
+
+ public Logger GetLogger(string message){
+  
+ return (level,func,exception>,parmter)=>
+{
+//  console.write(new LogEntry(){}）；//可以写详细的日志，这里不用企业库日志
+if(level>=LogLevel.Info&&funct!=null){
+  Debug.Write(funct(),parmetr)  //调试状态,写在控制台程序上了
+ // Trace.Write..（）；  //发布状态
+ Debug.Flush();//写完debug，必须关闭，否则占用后，会存在多线程问题，写入不进去日志
+}
+  return true;
+}
+
+}
+
+在QuartzActivator激活器类中 设置当前日志的提供者，
+是Quartz框架提供的
+ LogProvider.SetCurrentLogProvider<CustomLogProvider>();
+
+string filePath=Path.Combine()Appdoman,Curertnbasedircoery,"log.txt");
+if(!file。Exists(filpath)){
+//这里有多线程问题，需要在写入时，通过lock锁
+ Debug.Listeces.Add(TextWriterLogger);//dubug监听器，记事本的记录方法，并提供路径
+}
+
+==============================================
+1.新建微信解决方案 mvc WechatSample
+微信官网 mp.weixin.qq.com
+功能：服务号、订阅号、小程序
+订阅号：企业或者个人：
+服务号：在公众号里可以找到，比订阅号档次高一点，但是有发布消息限制
+企业号：相当于阿里云的钉钉，企业内部用的，办公的OA
+订阅号、服务号，开发的接口相似，知识权限问题。
+
+服务号：只能 政府、企业可以开通
+服务号，能够推送消息
+服务号涵盖了所有的接口
+小程序:相当于通过h5，开发一个网页app，在微信内使用，不像原生app需要在
+应用商店审核等等。
+
+腾讯使用的 腾讯浏览服务 x5，浏览器内核，dll文件，可以借助这个做一个浏览器
+webkit 开源浏览器引擎
+x5通过webkit内核改造的，腾讯qq浏览器也使用的是webkit内核
+为什么访问腾讯的浏览器就可以获取地理位置等等
+
+x5内核封装了很多接口，封装了读取手机的东西，
+
+小程序 相当于安装了一个app，
+
+微信开发模式
+管理模式
+开发模式
+开发者ID  appid
+AppScerct 密钥
+
+url服务配地址， http://www.xcode.me [哪个接口收数据]
+token令牌  weixin，每次发送数据，带上token，
+消息方式加密，密钥，
+
+消息推送
+模板消息
+被动 ：只是接收，
+主动：用户没有发起消息，需要主动发送给用户消息，并且需要消息模板
+
+微信开源了一套h5的网页： weui  weui github weuijs github || Jquery weui
+
+微信在公众号 菜单  绑定用户名，密码，，用户于微信关联起来，
+用户进入公众号会生成一个openid，并且是唯一的，取关，重新关注，openid始终是一个openid
+开发者可以拿到用户的openid，微信头像
+去 腾讯验证平台， 微信认证  请求腾讯服务器，腾讯服务器再转发给公司的服务器，并且带一个
+code，code是五分钟内有效
+用户----微信服务器----转发---公司服务器并绑定code，五分钟有消息，是个字符串----------
+公司服务器拿到微信服务器给的code，需要在5分钟内 发给腾讯服务器获取oepnid，------
+获得openid--------发送到客户端，每次传入到内部服务器就会带过来。
+服务器根据用户id获取oepnid，推送给用户消息，
+
+目前开发微信的组件，开源的  nuget
+Rabbit.Weixin
+
+nuget 盛派的dll Senparc.Weixin.mp.mvc   Senparc.Weixin
+
+引用以上两个dll
+
+创建一个WechatController
+创建 get、post action
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

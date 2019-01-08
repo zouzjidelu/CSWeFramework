@@ -1,0 +1,184 @@
+创建api有多种方法
+一、选怎web--web应用程序--webapi【会必须选中webapi】，为什么必须带mvc？
+
+因为webapi，如果默认寄宿在iis上，依赖于mvc或者aspnet的部分管道，才能运行起来webapi，做的这么一个过程
+所以选择webapi会默认勾选mvc的
+
+可以选择单元测试、webapi不是基于mvc跑起来的，他是独立的一个框架
+创建webapi，必须有两个核心的库，其他的可以都不要
+这两个库是  system.net.http,system.net.http.formatting
+如果要用序列化就还有要给newtonsfot.json
+
+
+二、选 asp.new core web 选择webpi，这里不会勾选mvc，与mvc分割开
+
+
+REST 风格，不是一种技术，也不是框架，也不是一种设计模式
+写接口尽量遵守REST风格、是一个中规则，编码规范
+基本规定：
+1.客户端和服务器无关【不保存状态】（cookie，seesion），在webapi中不存在cookie的，使用了，就是一种破坏
+   服务端也不能保存状态
+2.无状态，特别规定了服务器不需要记录客户端的状态，每次请求都要附状态
+   比如每次需要用账号密码接口需要用户密码请求，每次就应该传入给我，而不是在服务器上缓存起来这是一种误区，
+3.对于Get数据进行缓存，提高相应性能
+4.标准化的接口，这个接口是怎么写的，今天怎么写，后面都是这样写，而不是不同的风格
+
+不管是 HttpRequestMessage、HttpResponseMessage
+都有头、内容体 
+
+====================
+一、HttpRequestMessage
+
+public HttpContent Content{get;set;}
+内容体 HttpContent  Content 【HttpContent是一个抽象类，因为可能是一个xml，json，string，图片，具体不清楚，所以是抽象类】
+
+第一种Content  【返回一个字符串（StringContent）】
+      var response=new HttpResponseMessage();
+      response.Content=new StringContent("ss");
+     //这里的content就是httpcontent是一个抽象的，他返回的内容体可以是各种类型，这里返回的是string内容体
+     return response;
+
+第二种Content  【返回一个url编码格式【同样也可以解析】（FormUrlEncodedContent）】
+
+  var response=new HttpResponseMessage();
+      response.Content=new FormUrlEncodedContent(
+      new Dictionary(){
+      {"name1","value1"},
+      {"name2,"value2"}
+       });
+      //头部返回的格式是  application/x-www-form-urlencoded  这是提交表单的一种方法
+    return response;
+  调试，会发现  返回的格式是name1=value1&name2=value2;
+
+第三种Content  【返回一个字节数组格式（ByteArrayContent）】
+var response=new HttpResponseMessage();
+      response.Content=new ByteArrayContent(new byte[]{ 0x48,0x56});//传出去是一个字节数组
+return response;
+
+第四种Content  【返回一个（文件）流格式（StreamContent、PushStreamContent）】
+var response=new HttpResponseMessage();
+    第一种：StreamContent
+        比如读一个文件，new一个文件流
+        var stream=new FileStream("fileName",FileModel.Open,FileAssess.REad);
+        using(var content=new STreamContent(stream))//通过文件流组装
+        {
+           response.Content=content;
+        }
+        return response;
+        //返回去之后是下载还是一个文件，取决返回头
+        response.Headers.ContentType=new MdeiaTypeHeaderValue("text/plan");//这里直接会显示到网页上，如果是一个图片，就是通过记事本打开
+        //那么如果是下载呢？或者是一个apk文件呢？头部如何显示？ 百度搜索 mime 下载文件，查看请求头具体怎么写
+          如果是图片显示呢?就是（“image/jpeg”）     
+       如果一个文件特别大，比如一个g，那么都加载到内存里面，肯定是不合理的，所以就有了第二种的方式
+       推送流的方式
+        
+    第二种:PushStreamContent
+
+    var response=new HttpResponseMessage();
+    //动态组装一个xml  
+     var xml=new XElement("root",new XElement("book1","text"));//节点，节点下面的内容
+     var content=new PushStreamContent((stream,cont,ctx)=>{
+      
+     using(var write=new XmlWriter.Create(stream))
+     {
+         write.WriteStartElement("","");//写一点，就会发送给客户端
+   
+         write.Close();
+    }
+     
+    });//会发现是异步的方式
+     
+    return response.Content=content;
+
+第五种Content  【返回一个对象格式（ObjectContent）】
+   创建一个book实体
+   Book book=new Book{ID=11,Name="C++"};
+   var content=new ObjectContent(typeof(Book),book,new JsonMediaTypeFormatter);第三个参数是格式化器，如果返回的是json/xml/url编码的格式
+   return new HttpResponseMessage{Content=contet};
+  
+  假如有一个book2，继承了book，
+  那么返回的时候可不可以返回 book2呢？那么就是通过
+  typeof(Book或者Book2)的方式去返回数据
+   
+  还有一种是通过泛型的方式，不通过typeof的方式
+  var content=new ObjectContent<Book>(book2,new JsonMediaTypeFormatter());
+  
+   可以通过 另外一种方式返回
+   return  Request.CreateResponse(HttpStatusCode.OK,new{id=11,age=333},new JsonMediaTypeFormatter());//如果传格式化器，默认是json
+   或者
+  return  Request.CreateResponse<T>(HttpStatusCode.OK,T.....,new JsonMediaTypeFormatter());
+
+会发现ObjectContent是继承自HttpContent
+那么没有返回文件的，现在自定义一个
+
+public class FileConent:HttpContent
+{
+  
+ private readonly Stream filesteam=null;
+  public FileContent(string path,string mediaType="application/octet-stream")
+  {
+      filestream=new FileStream(path,FileModel.Open,FileAccess.Read);
+      base.Headers.ContentType=new MediaTypeHeaderValue(mediaType);
+     
+  }
+  protected ovverid Task SerializeToStreamAsync(... stream,...context)
+  {
+      return stream.CopyToAsync(stream)    ;
+  }
+   
+   protected override bool TryComputeLength(out long legth)
+  {
+       if(!fileStream.CanSeek){
+        length=0;
+        return false;
+       } 
+       else  {
+         length=fileStream.Length;
+         return true;
+       } 
+  }
+}
+
+   
+
+public httpreaponsemessage get(){
+
+ return new httpresponsemessage{
+  Content=new FileContent("123.pdf","image/jpge");
+}
+}
+
+上节课讲的 webapi架构图 ，今天讲第一层
+
+第一层：托管层（IIS，控制台，windows服务，wpf程序，托管进程（可以跑clr，装clr环境的进程就叫托管进程））
+ 1.初始化请求处理管道
+ 2.从底层接收 http请求
+ 3.将http请求  转换成 HttpRequestMessage，
+ 4.把   HttpRequestMessage对象推送到请求处理管道加工
+ 5.生产处理，然后将HttpResponseMessage转成本地的http协议
+
+webapi 微软支持的托管
+WEBAPI1.0 :web托管和自托管
+                  1.web托管：也就是将iis当中的请求(HttpRequest)转换成HttpRequestMessage
+	     如何转换？通过微软的适配器  叫做 Microsoft.AspNet.WebApi.WebHost
+   
+                  2.自托管：托管进程（控制台，windows服务） Microsoft.AspNet.WebApi.SelfHoost
+WEBAPI2.0:OWIN兼容宿主的托管机制
+                  
+
+
+
+ 
+
+
+
+   
+
+
+
+   
+   
+
+
+
+

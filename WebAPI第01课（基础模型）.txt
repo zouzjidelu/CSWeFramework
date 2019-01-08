@@ -1,0 +1,86 @@
+WEBAPI：资源（URL），表示（user.Name user.id），媒体类型（json，xml）
+WCF(webservice) SOAP协议[XML] http,socket(tcp/ip)
+
+[双工通信]
+AServer---->WCF<----BServer
+
+简单  JSON HTTP 
+灵活
+协议不能复杂
+
+
+GET (R)、POST(C)、PUT(U) 、DELETE(T)
+
+HTTP幂等性：GET,PUT,DELETE
+每个资源可以有多个表示：user(json,bson,xml,text,...)
+
+REST 风格（资源【传入的数据】，表示（user.xxx,格式），状态转化（GET,PUT,DELETE,POST））
+
+ASP.NET WEB API 实际上就让你更加简单构建 REST风格的API
+
+
+GET htttp://localhost:xxx/api/greeting http/1.1
+accept: application/xml||json
+
+WCF配置大部分都是xml格式的配置
+
+webapi是基于代码中的测试
+
+WEBAPI 可以在任何有CLR地方运行
+
+在零度官网搜索 Fiddler 下载下来即可，也有教程
+
+Fiddler 工具使用，使用它，测试webapi很好用
+这里的请求不限于浏览器的请求
+只要是http请求，都能抓到
+
+选择 Composer【模拟器】 
+创建webapi  在模拟器上填写地址，测试，可以返回json/xml格式数据
+只需要在请求头上加
+accept: application/xml||json
+即可
+
+
+WEB API 处理架构
+
+第一层:托管层（IIS，控制台，window服务，wpf桌面应用）
+
+第二层:消息处理程序管道（webapi 管道（日志，异常，缓存。。。。）） 
+
+第三层：控制器
+
+
+webapi 的两个dll
+
+System.Net.Http+System.Net.Http.Formatting
+
+废除之前的: System.Web.HttpRequest,System.Web.HttpResponse,System.Web.HttpRequestBase
+webapi:HttpRequestMessage HttpREsponseMessage
+
+
+
+
+HTTPRequestMessage、HttpResponseMessage讲解
+HttpRequestHeaders  Headers{get;} [请求头]
+HttpMethod Method【{get;set;}方法体】
+HttContent Content{get;set;}[内容体]
+针对HttpContent 的扩展HttpContentExtensions 
+
+var task=request.Content.REadAsAsync<Book>();
+//还可以通过个格式化器
+var task=request.Content.REadAsAsync<Book>(
+   new MdeiaTypeFormatter[]{ 
+   new JsonMediaTypeFormatter()
+   ,new XmlMediaTypeFormatter()
+   ,new FormUrlEncodeMediaTypeFormatter() //这种就是在地址栏传入的数据进行格式化，比如【url?bookName=c++&bookPrice=22.3...】
+   });
+Book book=task.Result;
+
+Mime type
+mimetype http 国际化格式标准
+
+
+
+
+
+
