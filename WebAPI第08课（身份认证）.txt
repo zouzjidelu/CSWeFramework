@@ -1,0 +1,127 @@
+1、认证：确认你是谁，A用户是老师，B用户是学生，C用户是xxx
+2、授权：老师能访问什么？A用户能干什么？C用户能做什么？
+
+认证：客户端《=======》服务器
+
+附带证书，附加用户名密码
+
+让用户带证书太麻烦，最传统的就是用户名密码电子邮箱这些，来做 如果传入过来之后，进行验证，是正确的的就通过
+
+System.Security.Principal
+
+IPrincipal和IIdentity
+
+IPrincipal表示Http请求的用户安全上下文
+
+IIdentity 表示当前用户的标识
+
+IsInRole 当前用户是否属于指定的角色
+
+
+
+this.User
+
+查看asp.net mvc 源码  Controller.cs 
+
+查看User 是如何获取到当前用户的信息
+ 
+HttpContext.cs
+
+
+================================================
+GenericIdentity 
+From认证
+System.Web.Security.FormsIdentity;
+
+Windows认证
+iis 在网站上有一个身份认证，打开后会看见有一个windows身份认证，如果没有说明安装iis时，没有勾选安装
+
+WindowsIdentity 
+
+
+
+var user= this.User.Identity as WindowsIdentity;
+user.IsAuthenticated 是否认证通过
+
+传入name才可以通过认证
+public ActionResult Index(string userName,string pwd)
+{
+  //表示用户
+  var user=new GenricIdentity(userName);
+   //表示上下文
+  HttpContext.User=new GenericPrincipal(user,new string [] {"admmin"});
+
+
+}
+
+
+如果在控制台程序中
+写上
+  Thread.CurrentPrincipal.Identity;
+可以读取当前用户有哪些权限，但是这里传入的必须是windows身份认证，才会在控制台获取到
+ static void Main(string [] args){
+  var user= new WindowsIdentity("administrator");
+  Thread.CurrentPrincipal=new WindowsPrincipal(user); 
+   
+  Test();  
+}
+
+
+[PrincipalPermission(SecurityAction.Demand,Role="Administrators")]
+public static void Test()
+{
+  
+}
+
+.net框架也提供了IPrincipal和IIdentity接口的一组具体实现：
+1.GenericPrincipal、WindowsPrincipal和Roleprincipal类实现类IPrincipal接口
+  GenericIdentity、WindowsIdentity和Formsidentity类实现了IIdentity接口
+
+
+http basic/digest  
+
+1.匿名用户访问服务器
+2.服务器要求提供证据
+
+http basic认证
+
+http 摘要认证 
+
+userName+pwd==>cc
+username+cc 
+hash对比
+
+客户端请求服务端，会有一个头。摘要认证
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

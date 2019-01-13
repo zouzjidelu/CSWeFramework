@@ -140,6 +140,8 @@ a.安装第三方插件 jsonp   Install-Package WebApiContrib.Formatting.Jsonp -Version
     c.在WebApiConfig中的Register方法里。在媒体类型映射中添加一个querystringmapping
       在api接口中加参数 url:xxxx?format=json/xml 就会返回不同格式的数据
     d.swagger学习文档 https://www.cnblogs.com/lhbshg/p/8711604.html
+    e.在swagger 调用 api接口时，配置自定义hander，用来验证身份，链接是：
+      https://swcareerroadmap.com/2017/11/02/asp-net-web-api-documentation-using-swagger-add-custom-headers/
 
 六、webapi宿主
 1.通过控制台应用程序托管、创建MyServerHost控制台程序

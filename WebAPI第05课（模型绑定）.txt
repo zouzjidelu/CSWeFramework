@@ -1,0 +1,173 @@
+假设前端提交一个数据过来
+
+public httpresponsemessage post( httprequestmessage request){
+
+  int id=int.Parse(request.RequestUri.PaseQueryString().Get("id"));
+
+  int values=request.Content.ReadAsFormDataAsync().Result;
+  
+  var book=new{ID=id,Name=values["name"],Price=values["price"]};
+
+  return request.CreateResponse(HttpStatusCode.OK);//用http协议状态来返回，reset风格。推荐http协议的状态来返回，比如请求是错误，或者是找产品
+  如果有，返回，如果没有，则返回 HttpStatuscode.NotFound,"订单为找到"）;如果异常就表示500
+  
+  //以上接受参数的写法都是原始写法。可以使用模型绑定的方式，
+}
+
+//模型绑定
+public httpresponsemessage post( Book  book){
+
+}
+
+如果还有一个book2，如何描述，到底绑定在哪个模型上呢？
+public httpresponsemessage post( Book2  book){
+
+}
+
+那么就需要有一个描述器来计算，对比,来确定绑定哪个模型
+
+HttpParameterBinding----->HttpParameterDescriptor
+
+那么也可以改变微软默认的行为
+==================================================
+添加一个文件夹 Extensions
+创建一个自定义类的绑定器 CustomBookParameterBinding ，继承 HttpParameterBinding
+public class CustomBookParameterBinding:HttpParameterBinding
+{
+
+      public CustomBookParameterBinding(HttpParameterDescriptor descriptor):base(descriptor) 
+      {
+		
+      }
+      
+       override Task ExcuteBindingAsync(....,...){
+        
+	int id=int.Parse(acitonText.Request.RequestUri.ParseQueryString().Get("id"));
+	string name=actionContext.Request.RequestUri.ParseQueryString().Get("name");
+
+	SetValue(actionContext,new Book(){ID=++id,Name=Name});
+	var tsc=new TaskCompletionSource<objcet>();
+	tsc.SetResult(null);
+	return tsc.Task;
+		
+	
+	}
+      
+      
+}
+
+在 WebApiConfig类的Register方法中注入参数绑定器
+
+  config.ParameterBindingRules.Insert(0,(descriptor)=>
+  {
+     
+          if(descriptor.ParameterType==typeof(Book)){
+	
+           return new CustomBookParameterBinding(descriptor); 
+          }
+	
+	return null;
+    
+  });
+
+
+写一个book控制器，一个get方法。获取book对象参数
+
+然后请求过来的时候，会发现，会自动绑定一些值到属性中
+
+启动程序后 在get方法中可以查看到会自动绑定一些属性的值，这些值都是在自定义模型绑定器类的实现
+
+那么写在 register类中不够灵活。可以自定义一个绑定器特性，在哪个返回参数中需要用到自定义的模型绑定器，直接打在接收的参数对象中就可以了
+
+创建一个自定义参数绑定器类
+public calss CustomParameterBookBindingAttribute:ParameterBindingAttribut
+{
+  override HttpParameterBinding()  {
+   return  new CustomBookParameterBinding(parameter);
+  }
+}
+
+在get方法中的接收参数时打上此标签
+
+public httpresponsemessage Get([CustomParameterBookBindingAttribute]Book book){
+
+}
+
+同样，在url中传入参数，在book参数对象中会接收到参数，这样就比较灵活。需要就打此标签，不需要就不打此标签
+
+如何在url地址中传入的参数，绑定到book对象中呢。
+ url?id=xx&name=xxx
+在url地址传入参数，不会自动绑定到book对象中，因为book对象是一个复杂类型，也可以通过在参数对象上打印一个FormUri标签，也可以绑定上
+
+百度，搜索  webapi参数绑定 ，复杂类型分隔符。查看是否绑定的。
+
+
+模型绑定有几种
+1.ModelBindingParameterBinder  (QueryString、Header、Content)    IValueProvide--->
+	
+	public class BookHeaderValueProvider:IValueProvider
+        {
+		private readonly HttpControllerContext context;
+		//包含此前缀的
+  		private const string BookHeaderPrefix="B-";
+		public  BookHeaderValueProvider(HttpControllerContext context){  this.context=context;}
+                    
+		public bool ContainsPrefix(string preifx){
+		
+		 return  context.Request.Headers.Any(h=>h.Key.Contains(BookHeaderPrefix+prefix));
+
+		}
+
+   		public ValueProviderResult GetValue(string key)
+		{
+			//B-book.
+			if!context.Request.Headers.Any(h=>h.Key.Contains(BookHeaderPrefix+key))
+			{
+ 			return null;
+			}
+			//为什么一个key会有多个value？比如chekbox选中的多个值
+			var value=context.Request.Headers.GetValues(BookHeaderPrefix+key)).First();
+			var string Value=value is string?(string)value:value.ToSTring();
+			return new ValueProviderResult(value,stringValue,CultureInfo.CurrentCulture);
+		}
+ 	}
+
+	值提供工厂
+        public class BookHeaderValueProviderFactory:ValueProviderFactory
+	{
+		
+		return new BookHeaderValueProvider(actionContext.ControllerContext);
+	}
+	
+	在 webapiconfig类的register方法，注入值提供工厂
+	var valueProviderFactories=config.Services.Add(typeof(ValueProviderFactory),new BookHeaderValueProviderFactory())
+	;
+2.针对url进行模型半丁
+3.FormatterParameterBinder
+4.FromBodyAttribute
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

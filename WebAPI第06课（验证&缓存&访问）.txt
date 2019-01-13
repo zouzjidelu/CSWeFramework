@@ -1,0 +1,223 @@
+验证模型，在实体类上打标记
+
+比如新增一本书
+public obejct Post([FromUri||FromBody]Book book)
+{
+  //这样写可维护性比较差
+  if（book.name.length...）
+  {
+ 
+  }
+
+   if(!this.ModelState.IsValid){
+	var errors=ModelState.Where(e=>e.Value.Errors.Count>0).Select(e=>new{
+		Name=e.Key,
+		Message=e.Value.Errors.First().ErrorMessage
+	  });
+	var response=new HttpResponseMessage(HttpStatusCode.BadRequest);
+        response.Content=new ObjectContent<object>(errors,new JsonMediaTypeFormatter());
+
+	return response;
+   }
+   
+    return Request.CreateResponse(HttpStatus.Code.OK);
+}
+ 
+//上面这段代码都是公用的，可以抽象出来。讲一个扩展方法，筛选器，绑定模型，在aciton执行之前进行。
+通常方法在action执行之前的筛选器上拦截请求，做验证
+
+创建一个 ValidationActionFilterAttribute
+public calss ValidationActionFilterAttribute:ActionFilterAttribute
+{
+   public override void OnActionExecuting(...actionContext){
+       
+	if(!actionContext.ModelState.IsValid){
+	var errors=actionContext.ModelState.Where(e=>e.Value.Errors.Count>0).Select(e=>new{
+		Name=e.Key,
+		Message=e.Value.Errors.First().ErrorMessage
+	  });
+	var response=new HttpResponseMessage(HttpStatusCode.BadRequest);
+        response.Content=new ObjectContent<object>(errors,new JsonMediaTypeFormatter());
+
+	return actionContext.response=response;
+   }
+   
+    return Request.CreateResponse(HttpStatus.Code.OK);
+ 
+   }
+}
+
+如果对某个aciton做验证，就在方法上打次标签特性，或者在控制器上打此标签。也可以在webapiconfig。的注册方法中，做一个全局的
+ config.Filters.Add(new ValidationActionFilterAttribute());
+
+还有一个第三方验证组件  FluentValidation api
+ Install-Package FluentValidation.WebAPI -Version 7.2.1
+
+在博客园找资料
+
+==========================api缓存==========================
+
+http头部有缓存标记 就对数据进行缓存，缓存到内存？还是第三方缓存服务器上？
+
+Install-Package WebApiCache -Version 1.0.1
+
+具体如何用，在github上查看
+
+在aciton上打上标记，并指定时间，就可以了
+
+查看源码如何实现，会发现，是缓存在内存缓存中，局限性很大
+
+，可不可以通过配置的方式，决定缓存到哪个地方呢？
+
+nuget上查找 支持redis的
+WebApi2.RedisOutputCache  自己研究
+
+==========================webapi调用=============================
+只要能访问http协议，就能调用reset接口
+创建一个 控制台程序
+
+HttpWebRequest---->WebClient[对前者的一个封装]------HttpClient[System.Net.Http]
+
+在nuget上找对应的dll。 安装进去
+引入 System.Net.Http  System.Net.Http.Formatter
+
+HttpClient httpClient =new HttpClient();
+var task1 = httpClient.GetStringAsync("http://www.xcode.me");
+var task2 = httpClient.GetStringAsync("http://www.xcode.me");
+
+Task.WhenAll(task1,task2);
+
+Console.WriteLine("OK");
+
+Console.WriteLine(task.Result);
+
+
+并行编程 电子书，在零度搜索。看一下
+
+
+HttpClient 判断是否是异常
+var rsponse =httpClinet.GetAsync("http://www.xcode.me").Result;
+if(response.EnsureSuccessSta...){
+
+}
+
+
+====只返回http头部=====
+
+var rsponse =httpClinet.GetAsync("http://www.xcode.me",HttpCompletionOption.RsponseHandleRead).Result;
+
+//返回内容
+var rsponse =httpClinet.GetAsync("http://www.xcode.me",HttpCompletionOption.RsponseContentRead).Result;
+
+发一起一个长的请求，可不可以在中途取消请求呢？
+
+传入一个取消器
+CancellationTokenSource source=new ...();
+CancellationToken token=source.Token;
+
+var rsponse =httpClinet.GetAsync("http://www.xcode.me",HttpCompletionOption.RsponseContentRead,token).Result;
+
+source.Cacel();
+if(source.Token.IsCancellationRequested){
+    
+}
+
+nuget 
+HttpClient  extensions   扩展
+安装
+Install-Package System.Net.Http.Formatting.Extension -Version 5.2.3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
