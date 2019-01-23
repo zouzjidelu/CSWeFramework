@@ -1,0 +1,108 @@
+webapi 微软支持的托管
+WEBAPI1.0 :web托管和自托管
+                  1.web托管：也就是将iis当中的请求(HttpRequest)转换成HttpRequestMessage
+	     如何转换？通过微软的适配器  叫做 Microsoft.AspNet.WebApi.WebHost
+   	 2.自托管：托管进程（控制台，windows服务） Microsoft.AspNet.WebApi.SelfHoost
+
+WEBAPI2.0:OWIN兼容宿主的托管机制
+
+web托管
+{                  
+ASP.NET组成：应用程序，模块和处理程序。
+mvc是跑在asp.net管道中的一个组件
+
+bings搜索 asp.net管道图，理解iis-asp.net请求过程
+
+IIS 启动 ----http.sys【监听机制】--->筛选器【*.aspx||*.axd||*.php】iis封装的请求--->HttpRuntime
+--->HttpContext(request,response)--->进入asp.net管道---->进入一系列的模块（HttpModule【很多个模块】）
+---->HttpHandler处理程序（MVC）--->mvc路由---->控制器----action--->执行action。
+
+PageHandler
+MvcRouteHandler
+
+自定义一个 Module，比如图片大于多少M，就不返回请求
+创建一个类
+public class ImageMOdule:IHttpModule
+{
+    public void Disponse()
+    {}    
+    public void Init(HttpApplication context){
+        context.RequestCompleted+=Context_RequestCompleted; 
+    }
+
+    private void Context_RequestCompleted(object obj, Events enevt){
+   
+    }
+}
+
+
+自定义一个Handler
+public class CustomHandler:IHttpHandler
+{
+     
+}
+
+mvc与webapi路由完全不一样
+
+mvc 的是 RouteCollection
+webapi的是 HttpRouteCollection【只要是webapi的都带上了http】
+
+iis的请求【httprequest】转换成 httprequestmessage
+如何进行适配的
+
+UrlRoutingModule(请求 HttpContext.HttpRequest)
+--->WEBAPI(HttpRequestMessage)
+
+ 如何进行转换的呢？
+寄宿在iis当中的 system.web.http.webhost来进行转换的
+
+}
+
+WEBAPI自托管
+{
+   在 webapi第1.2节课的时候讲过，可以看下。mvc搭建框架系列后的webapi1.2两节课有讲
+  
+}
+
+
+WEBAPI2.0:OWIN兼容宿主的托管机制
+OWIN(Open Web Interface for .net)[开源web接口基于.net]，一套标准
+   
+
+Owin.org
+创建一个基于owin托管的webapi
+创建类库 WebApiSample
+在nuget上下载  webapi源包 【Microsoft.AspNet.WebApi.Owin】会自动下载
+webapi需要的dll  System.Net.Http,,System.Net.Http.Formatter,System.Web.Http,
+
+1.创建一个BookController
+2.创建一类，一个main函数
+   var config = new HttpConfiguration();
+   var server=new HttpServer(config);
+   
+   bings 搜索  webapi owin host
+   查看如何配置
+  
+  nuget 搜索   owinhost   服务器
+   bings搜索     webapi，katana
+
+内存寄宿
+Azure server bus host 宿主
+
+==========宿主的方式=======
+webhost iis=---asp.net管线===>webapi
+自宿主   监听http请求，---webapi管道
+owin（字典）---》webapi
+内存托管：client---》server
+AzureserverBus--->外网http请求通过队列的方法
+---》本地webapi端口上来---》webapi
+
+HttpRequestMessage
+
+
+   
+   
+
+
+
+

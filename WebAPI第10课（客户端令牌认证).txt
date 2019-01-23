@@ -1,0 +1,234 @@
+认证:基于令牌的身份认证（openid）
+       为什么会诞生openid？
+	1.多个网站密码可能相同，因为记忆简单，刚好有一个网站是非法网站，记录了你的明文密码
+   	   去多个网站去试你的密码
+                2.某些网站需要谷歌账号登陆，刚好有谷歌账号，就可以登陆，
+        群共享找到openid与oauth协议的详解方式  
+
+      零度网站   ------谷歌网站
+     1. 零度网站有谷歌网站的登陆方式
+     2.用户访问零度网站-----通过谷歌的方式登陆-----用户输入在谷歌上的账号密码---在谷歌服务器认证，----通过，则向零度服务器发送一个
+       回调，将用户的openid与一些信息传入到零度网站----零度服务器保存openid，并跳转至对应的登陆成功的页面，------用户每次发送请求
+       零度服务器，带上openid，则可以正常与零度服务器进行交互，，不需要通过谷歌服务器做认证了。后期认证时间失效，则需要重新登陆
+      
+     
+
+   
+授权：基于令牌的授权（Oauth2.0）
+      解决一个什么样的问题？
+     例子：
+     零度网站提供一个照片的打印服务，对于用户来讲，可能照片存在百度网盘里面在，那么现在我要做的事情，就是在零度
+     网站上打印照片
+     第一种方法，零度网站上打印照片，需要将在百度上的图片下载下来，传到零度网站上，然后点击生成，开始打印
+     第二种方法，把百度的账号密码给我，我去请求抓页面，然后点生成，打印照片
+     第一种，很麻烦，如果有2k张图片需要打印，每一次下完，再上传到零度网站进行打印，比较繁琐，效率很低，工作量大
+     第二种，不安全，把账号给第三方去做下载，如果正规还好，不正规，就不安全
+    再比如github上的代码，要上传到微软的云服务器上，那么做的步骤是
+    1.将github上的代码下载下来，再传入到微软的云服务上就会很麻烦，有没有一种办法就是我不告诉微软账号密码的方式
+       就可以将代码上传到微软云服务器上呢?
+     那么oauth就是来做这个事情的
+    
+     用户【资源拥有者，因为拥有百度网盘的照片】--------零度网站【客户端应用】（服务消费方）------------认证（授权中心）服务器【百度】-------------资源服务器【百度】（资源和认证服务器一般分开，分布式部署）
+    
+    他们之间是如何进行授权的呢?
+    例子1：
+    比如用户ivy,授权零度去百度服务器上取照片，授不授权，只有ivy说了算，只有你同意了，百度才会给我
+ 
+    用户----访问零度网站打印服务，需要照片，但是照片在百度服务器上【AppServer】，--------需要有百度的账号密码，--------在百度服务器进行认证，【输入百度的账号密码】，---------百度服务器将这个用户的认证的code返回给零度网站----
+    -----零度网站拿到code【openid】在后台服务器，再次请求百度服务器进行授权，-----------授权成功，百度服务器将token令牌，
+    ----------返回给零度服务器【零度服务器与百度服务器有一个oauth2.0的协议，】，------------零度服务器拿到用户在百度上的token
+    ---------通过令牌访问资源服务器---------资源服务器将这个用户的有权限访问的资源（照片）给零度网站，-----------用户打印
+
+   例子2：
+   保险箱【资源】R-----------用户【Ivy】U-------------移动公司【M】-----------授权中心【P】
+   
+   clientid===客户端id
+   callback  ==url
+   response-type---code
+   scope==只能访问用户惜
+   scriuy
+
+   推荐一个oauth2.0的文章，阮一峰的 百度搜索，讲解的很详细
+   
+   授权：对于零度网站来说是黑盒的，我不知道用户是谁，我只知道需要百度网盘中的图片，用户在百度服务器上进行授权，将token给零度，零度去获取图片
+             进行打印，
+  认证：用户---访问百度服务器认证，，，认证成功，返回给零度服务器，---零度服务器存入code[openid],
+  两者结合起来，才可以知道用户是谁，以及有什么权限
+  有些时候，授权的过程，认证的过程一起做的
+  openid和oauth2.0的区别就是， 认证的时候会返回openid，授权后是不会返回openid，只会返回token，，对于零度网站来说，知道用户是谁很重要
+  因为，如果用户是零度网站的一个vip，那么打印照片的速度会加速，等等一系列的操作。那么在授权之后，只返回了token，没有返回openid，我不知道
+  这个人是谁的。
+
+oauth2.0 只返回了 
+token  tokentype expires_in,refresh_token,example_paramter
+如果通过token再去请求百度，拿用户的信息就有点浪费资源了
+所以，可以通过 openid+oauth2.0来做
+
+
+通过实例来做一下认证的过程
+
+IdentityServer4适合在 core中应用，
+
+我们用的是IdentityServer3  他已经封装了一些通用的组件，openid oauth2.0都支持
+
+github上可以找到源代码
+
+IdentityServer3 是通过owin中间件来做的
+
+1.创建一个IdentityServerSample的控制台应用程序
+2.安装 Install-package identityserver3
+   会有identityserver.dll和owin.dll【是通过owin中间件来做的】
+3.提供一个类，这个类是一个资源【权限】
+public  static class Scopes
+{
+  //获取权限
+    public static List<Scope> GetScopes()
+   {
+     //如果是数据库存好的，这里获取的就是数据库存储好的权限，这里在内存中制造数据
+    List<Scope>scops=new ...();
+    scops.Add(new Scope{Name="api1"});
+    scops.Add(new Scope{Name="api2"});
+    return scops;
+   }
+  
+}
+
+b.定义一个客户端类  Clients
+public class Clients
+{
+    //跟腾讯做了合作，有腾讯qq登陆，提供一些客户端
+   pulibc stat List<Client> GetClients()
+  { 
+    return  new List<Client>{
+        new  Client{
+           ClientName="零度",
+           ClientId="zerodo",
+           Enabled=true,//是否允许访问客户端
+           AccessTokenType=AccessTokenType.Referenec,//访问token类型 
+           Flow=Flows.ClientCredentials,//认证模式，【客户端模式，授权码模式，简单模式，密码模式，等等】,这里使用的是客户端认证模式
+          ClientSecrets=new List<Secret>//客户端密钥
+         {  
+               new Secret("41223EDC-1435-4A2a.....".Sha256())//可以自己生成  
+         } ,
+         AllowedScopes=new List<string>{"api1"}//允许访问权限
+      }
+   };   
+
+  }
+}
+
+c.添加一个类 Startup  
+  寄宿api需要引入宿主的api库  
+   install-package Microsoft.Owin.SelfHost
+
+//启动时，运行这个类
+[assembly:OwinStartup(typeof(Startup))]   
+public class Startup
+{
+     public void Configuration(IAppBuilder app)
+    {
+
+    //配置identityserver token验证
+    app.UseIdentityServerBearerTokenAuthentication(new IdentityServerBearerTokenAuthenticationOptions{
+          Authority="http://lcalhost:5000",
+          ValidationMode=ValidationMode.ValidationEndpoint,
+           RequiredScopes=new[]{"api1","api2"}
+      });
+       在管道当中寄宿identityserveroptions，配置idsever的行为
+     var options =new IdentityServerOptions
+     {
+        Factory=new IdentityServerServiceFactory()
+        .UseInMemoryClients(Clients.GetClients())//内存客户端
+         .UseInMemoryScopes(Scopes.GetScopes())//内存权限
+         .UseInMemoryUsers(new List<InMemoryUser>()),//内存用户
+         RequireSsl=false//配置证书
+     }；
+    
+     app.UseIdentityServer(options);
+     //api集成
+     var config=new HttpConfiguration();
+     config.MapHttpAttributeRoutes();//自定义的路由，可以找到
+     config.Filters.Add(new AuthorizeAttribute());//筛选器
+    
+     app.UseWebApi(config);
+    }
+}
+
+在main方法中
+
+ using(WebApp.Start<Startup>("http://localhost:5000"))
+{
+   console.write("server runing....");
+   console.ReadKey();
+}
+
+//写一个测试控制器类
+ ps:需要引入api包  install-package Microsoft.AspNet.WebApi.Owin
+ //方便起见，在这里配置路由演示   
+[Rotue("test")]
+public  class TestController:ApiController
+{
+    public   IHttpActionResult Get()
+    {
+       var principal=User as ClaimsPrincipal;//主体
+       var  Json(new
+	{
+	   message="OK",
+                   client_id= principal.FindFirst("client_id").Value
+               });   
+    }
+}
+
+f5运行起来以后
+在浏览器输入 localhost:5000， 看到了welcom identityserver就说明成功了
+可以点击 页面中得连接  discovery document，查看具体的返回内容
+
+我们创建了一个test控制器，在地址栏输入test，回车
+ 会发现没有权限请求此api，并且返回http状态是401  意思是没有授权，
+
+新建一个控制台应用程序，【客户端】 ConsoleClient
+引入一个库 身份认证模型  
+  install-package IdentityModel  [客户端请求需要用到]
+在main函数中
+  static void main(string [] args){
+   var tokenclient =new TokenClient("http://localhost:5000/connect/token","zerodo","41223EDC-1435....");//参数1：申请token的地址,参数2：客户端id，客户端密钥
+   var token= client.RequestClientCredentialsAsync(api1").Result;//获得令牌，通过客户端认证方式获取，这里跟Clients类中的认证模式要匹配
+    
+  var client=new HttpClient();
+   client.SetBearerToken(token.AccessToken);//SetBearerToken是identityserver提供的扩展方法
+   string result=client.GetStringAsync("http://localhost:5000/test").Result;
+   console.write(result);
+   console.ReadKey();
+ }
+
+将项目设置为多项目启动，先启动服务，在启动客户端
+
+=======简化模式============
+ client id
+ client secret
+ 
+ tokent
+   
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+

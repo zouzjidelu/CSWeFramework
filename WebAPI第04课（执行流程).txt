@@ -1,0 +1,154 @@
+上节课将的托管方式：
+1.web托管---》iis  asp.net管道  httprequest(httpcontext)--->webapi(httpRequestMessage)
+2.自托管：控制台，windows服务，（http监听器）---》webapi(httpRequestMessage)
+3.owin托管：在core中大量应用，构建字典，请求的一些信息，比如cookie，header头，等，字典---》webapi(httpRequestMessage)
+4.内存托管：测试阶段
+5.WindowsAzure servicebus 
+iis---->owin适配器----》webapi（httprequestMessage）
+
+WebApi管道 
+HttpRequestMessage----》webapi管道（Handler1，Handler2,...）--》分发程序
+----》控制器---》action
+=========================
+创建webapi项目【WebApiSample】
+
+ApiController是微软默认实现的webapi，快速构建webapi使用的，如果需要大量的
+去重写webapi。可以实现IHttpController
+1.WebApiConfig 配置，默认路由配置
+2.自定义自己的路由，在方法上 [Route("service/hello")] 就可以通过这个路由来访问
+
+public class ValuesController:ApiController
+{
+ [Route("service/hello")]
+ public Ienumare<string> Get()
+ {
+  }
+}
+
+在WebApiConfig中配置 路由，微软就会自动去找控制器，action上打的route特性
+在WebApiConfig 的 REgister中可以使用依赖注入
+可以加 服务
+config.Service.Add(typeof(IConvertible),typeof(MyCon....));
+
+config.DependencyResolver.GetServer();//去解析服务
+//获得服务
+ config.Servier.GetServer();
+
+HttpConfiguration.cs 查看webapi的源代码，
+会发现在里面注册了很多的服务 ，有一个默认的服务
+DefaultService.cs
+
+//选择器
+config.Services.Replace(typeof(IHttpControllerSelector),new CustomControllerSelector);
+
+===webapi请求返回过程====
+HttpControllerDispatcher //分发器，主要职责，
+IHttpControllerSelector--->IHttpControllerActivator(激活器)--->
+IHttpController(ExecuteAsync)--->IHttpActionSelector--->IHttpActionInvoker（执行过滤器）
+---->IHttpActionResultConverter(通过转换器把返回的数据类型是不规则的，需要通过转换器，全转换成HttpResponseMessage)
+
+（过滤器）筛选器 IFilter--->xxxAttribute,做筛选器的目的，拦截东西，做一些验证，在action执行前后执行筛选器
+
+在webapiconfig类中可以配置筛选器
+
+config.Filters.Add(new CustomFilter);//全局的筛选器，在执行的时候就会执行
+也可以针对action执行filter，在action上打上自定义的过滤器就可以
+
+微软也提供了一些过滤器
+1.身份认证【首先是系统用户】
+2.授权【有哪些权限】
+3.操作过滤器【那些可以执行，不可以执行，】
+4.异常过滤器【记录日志，客户的异常】
+执行顺序也是按照这个来执行的
+优先级：
+Action>Controller>config.filter.add()
+
+一.身份认证筛选器  IAuthorizationFilter[继承了IFilter，并且是否可以标记多次]，他也是一个接口，并且执行ExecuteAuthorizationFilterAsync
+    微软也有一个默认的身份认证实现  AuthorizationFilterAttribute[是一个抽象类]
+1.添加一个类，自定义一个认证筛选器【CustomAuthorizationFilterAttribute】
+   继承微软默认实现的身份认证抽象类，并实现两个方法
+
+public override void OnAuthroization(Http... actionContext)
+{
+  if(actionEontext.Request.Headers["id"]==222)
+{
+    actionContext.REsponsnew HttpResponseMessage();
+ .... 
+ ....
+ ..
+}
+}
+
+然后放在控制器的上，就会每次都会进行此筛选器的认证，也可以加入一个全局的，每次都认证，在webapiconfig中配置全局的
+
+二、授权过滤器【IAuthoriz】System.Web.Http.Filters.IAuthorizationFilter
+
+先认证【是不是本系统的】，后授权，【有哪些权限】
+也可以运行不认证授权  【Anonymous】，标记了此特性，就会跳过认证||授权
+
+三、操作过滤器【筛选器】
+public calss CustomFilterAttribute：ActionFilterAttribute
+{
+  public override void OnActionExecuting(... actionContext)
+ {
+   actionContext.Response=...
+  }
+  public override void OnActionExecuted(... actionExecutedContext)
+  {
+      actionExecutedContext....
+   }
+}
+...ing 进行时
+...ted  执行后
+并且可以在控制器或者aciton上进行打印此镖旗
+
+四、异常处理器
+public CustomExceptionFilterAttribute:ExceptionFilterAttribute
+{
+     .......
+}
+
+
+IHttpActionInvoker(身份认证，授权，操作（操作前方法，执行模型绑定，操作后方法），异常)----IHttpActionResultConverter。。。
+IActionResultConverter---》HttpREsponseMessage
+三种转换器
+ResponseMessageResultConverter(原本返回)
+ValueResultConverter<T>(返回类型时)
+VoidResultConver
+
+
+【验证参数】
+public class VerifyModelStateAttribute:ActionFilterAttribute
+{
+    public override void OnActionExecuting(...actionContext){
+      
+   }
+
+    public override void OnActionExecuted(){   
+    
+     
+
+   
+   }
+    
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+   
+
+
+
+
+
+
