@@ -1,3 +1,16 @@
+IdenittyServer3 支持openid和oauath2.0 授权
+现在流行的是 OpenId Connect==OAuth 2.0+OpenId (JWT[jsonwebtoken])
+使用oauth2.0需要理解以下几个角色
+
+资源拥有者（用户）+客户端（第三方应用）+认证授权服务器（认证提供商）可以分布式部署+资源服务器
+
+1、我要开发一个webapi给第三方公司使用：客户端(Client)+授权服务器(Auth Server)+资源（WebApi Action）
+2、客户端想使用某个用户的个人资源，要得到用户的授权。
+3、针对app和前端js当中授权怎么进行?[第三节课讲]
+
+
+
+
 认证:基于令牌的身份认证（openid）
        为什么会诞生openid？
 	1.多个网站密码可能相同，因为记忆简单，刚好有一个网站是非法网站，记录了你的明文密码
@@ -62,15 +75,15 @@
 oauth2.0 只返回了 
 token  tokentype expires_in,refresh_token,example_paramter
 如果通过token再去请求百度，拿用户的信息就有点浪费资源了
-所以，可以通过 openid+oauth2.0来做
+所以，可以通过 openid+oauth2.0来做 也就是  OpenId Connect 
 
 
 通过实例来做一下认证的过程
 
 IdentityServer4适合在 core中应用，
 
-我们用的是IdentityServer3  他已经封装了一些通用的组件，openid oauth2.0都支持
-
+我们用的是IdentityServer3  他已经封装了一些通用的组件，openid oauth2.0都支持包括阮一峰博客上的几种模式都完整实现了。
+现在基于identityserver3 在core过程中会集成到框架中去
 github上可以找到源代码
 
 IdentityServer3 是通过owin中间件来做的
@@ -78,7 +91,7 @@ IdentityServer3 是通过owin中间件来做的
 1.创建一个IdentityServerSample的控制台应用程序
 2.安装 Install-package identityserver3
    会有identityserver.dll和owin.dll【是通过owin中间件来做的】
-3.提供一个类，这个类是一个资源【权限】
+3.提供一个类，这个类是一个资源【权限】（资源服务器）
 public  static class Scopes
 {
   //获取权限
@@ -93,7 +106,7 @@ public  static class Scopes
   
 }
 
-b.定义一个客户端类  Clients
+b.定义一个客户端类  Clients（认证服务器）
 public class Clients
 {
     //跟腾讯做了合作，有腾讯qq登陆，提供一些客户端
@@ -138,9 +151,9 @@ public class Startup
      var options =new IdentityServerOptions
      {
         Factory=new IdentityServerServiceFactory()
-        .UseInMemoryClients(Clients.GetClients())//内存客户端
-         .UseInMemoryScopes(Scopes.GetScopes())//内存权限
-         .UseInMemoryUsers(new List<InMemoryUser>()),//内存用户
+        .UseInMemoryClients(Clients.GetClients())//内存客户端【内存客户端中的数据可以从数据库中读取，这里是在内存中自定义的客户端】
+         .UseInMemoryScopes(Scopes.GetScopes())//内存权限，同上
+         .UseInMemoryUsers(new List<InMemoryUser>()),//内存用户，同上
          RequireSsl=false//配置证书
      }；
     
