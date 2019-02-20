@@ -204,7 +204,7 @@ f5运行起来以后
   install-package IdentityModel  [客户端请求需要用到]
 在main函数中
   static void main(string [] args){
-   var tokenclient =new TokenClient("http://localhost:5000/connect/token","zerodo","41223EDC-1435....");//参数1：申请token的地址,参数2：客户端id，客户端密钥
+   var tokenclient =new TokenClient("http://localhost:5000/connect/token","zerodo","41223EDC-1435....");//参数1：申请token的地址，在请求http:localhost:5000,点击第一个连接会看到获取token的地址，就是这个地址,参数2：客户端id，客户端密钥
    var token= client.RequestClientCredentialsAsync(api1").Result;//获得令牌，通过客户端认证方式获取，这里跟Clients类中的认证模式要匹配
     
   var client=new HttpClient();

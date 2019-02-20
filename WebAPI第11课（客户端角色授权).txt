@@ -1,0 +1,316 @@
+IdenittyServer3 支持openid和oauath2.0 授权
+现在流行的是 OpenId Connect==OAuth 2.0+OpenId (JWT[jsonwebtoken])
+使用oauth2.0需要理解以下几个角色
+
+资源拥有者（用户）+客户端（第三方应用）+认证授权服务器（认证提供商）可以分布式部署+资源服务器
+
+1、我要开发一个webapi给第三方公司使用,这句话透漏的信息是：
+     客户端(Client)+授权服务器(Auth Server)+资源（WebApi Action）
+
+2、客户端想使用某个用户的个人资源，要得到用户的授权。
+
+3、针对app和前端js当中授权怎么进行?[第三节课讲]
+
+
+一、创讲一个解决方案OauthSample
+二、创建一个认证授权服务器 OauthSample.AuthServer
+	1.安装oauth2.0的自宿主  Install-Package Microsoft.Owin.SelfHost -Version 4.0.0-preview1 不要安装webapi的自宿主
+	 ，虽然可以，但是这里不会用到webapi的东西，有些冗余
+  	2.创建一个启动类Startup
+	public class Startup
+        	 {
+		//需要配置这个服务器、监听器
+               		 public void Configuration(IAppBuilder appBuilder)
+       		{
+		    //需要oauth2.0的实现了，所以要安装一个identityserver3，id4是在core中使用的
+		    Install-Package Identityserver3
+		   // 首先，这里是授权服务器，那么你要告诉授权服务器怎么获取用户，怎么获取客户端，，
+			//idserver选项
+		    var options=new IdentityServerOptions{
+		Facory=new IdentityServerServiceFActory()
+		.UseInMemoryClients()
+		.UserInMemoryScopes()	
+		.UseInMemoryUsers(new List<InMemoryUser>()),
+		RequireSsl=false
+		};
+		    //管道当中加入idneityserver
+		appBuilder.UseIdentityServer(options);
+		//加入之后需要启动起来
+		}
+        	}
+	3.首先，这里是授权服务器，那么你要告诉授权服务器怎么获取用户，怎么获取客户端，
+	4.创建一个客户端提供者，告诉idserver有哪些客户端
+	  public class ClientProvider
+	{
+	     public static IEnumrable<Client> GetAllClient()
+	    {
+		return new List<Client>
+	                {
+		   new Client{
+		    ClientName="零度A公司",
+		     ClientId="lingdu1",
+		     Flow=Flows.ClientCredentials,
+		     AccessTokenType=AccessTokenType.Reference,
+		     ClientSecrets=new List<Secret>{
+		    	new Secrent("afdfd".Sha256()) 
+		    },
+		    Claims=new List<Claim>{//分组
+			new Claim("role","role1"),
+			new Claim("role2","role2")
+		     },
+		     //允许客户端访问的范围
+		     AlloweScopes=new List<string>("webapi1"),
+		   },
+		   new Client{
+		    ClientName="零度B公司",
+		     ClientId="lingdu2",
+		     Flow=Flows.ClientCredentials,
+		     AccessTokenType=AccessTokenType.Reference,
+		     ClientSecrets=new List<Secret>{
+		    	new Secrent("afdfd".Sha256()) 
+		    },
+		    Claims=new List<Claim>{//分组
+			new Claim("role111","role111"),
+			new Claim("role222","role222")
+		     },
+		     //允许客户端访问的范围
+		     AlloweScopes=new List<string>("webapi1"),
+		   }
+
+		};
+	    }
+	}
+	5.范围提供者（资源）
+	public class ScopeProvider
+	{
+		public static  IEnumerable<Scope> GetAllScopes()
+		{
+			return new List<Scope>
+			{
+				new Scope{Name="webapi1"},
+			};
+		}
+	}
+	//这里没有用户参与，如果有用户参与，还需要有用户提供者
+	6.在Main方法中启动授权服务器
+	string baseAddress="http://localhost:5000/";
+	using(WebApp.Start<Startup>(baseAddress))
+	{
+	  Console.WriteLine("auth server start...");
+	  Console.Readkey();
+	}
+	7.启动授权服务器，在页面上输入 http://localhost:5000,查看是否配置成功【独立的一台服务器】
+	 出现了identityserver的页面就说明成功了，点击第一个连接进入会发现配置的一些信息
+	申请token的地址，
+	刷新token
+	验证token
+	检查seseion
+	等等。。
+		
+三、创建一个WebApi  OauthSample.WebApi【webapi自宿主不会，可以直接搜索 webapi自宿主，去官网查看，如何使用  web api 2 selfhost】
+      1.安装webapi自宿主的dll   Install-Package Microsoft.AspNet.WebApi.OwinSelfHost【包括api所需要的库，以及一个自宿主的服务器】
+      2.创建一个启动Startup类【这是一种规范】
+         public class Startup
+         {
+	//需要配置这个服务器、监听器
+                public void Configuration(IAppBuilder appBuilder)
+       	{
+	    添加一个配置
+	    HttpConfiguration config=new ...();
+	    config.Routes.MapHttpRoute(
+		name:"DefaultApi",
+		routeTemplate:"api/{controller}/{id}",
+		defaults:new {id=RouteParameter.Optional }	
+	    );
+	  //如果在api上没有打 Authorize标记，微软就会默认检查这个 User.Identity.IsAuthenticated，检查过程是identityserver已经帮忙实现
+	   appBuilder.Filters.Add(new AuthorizeAttribute());
+
+ 	   //路由监听器
+  	    appBuilder.UseWebApi(config);
+	}
+         }
+       3.在 main函数中启动这个服务器，
+	string baseAddress="http://localhost:6000/";
+	using(WebApp.Start<Startup>(baseAddress))
+	{
+	  Console.WriteLine("webapi host start...");
+	  Console.Readkey();
+	}
+       4.创建两个api，来测试下，是否宿主成功，能否访问api
+          
+          a.创建一个类，书的存储器，这里就相当于是从数据库获取
+             BookStore类
+             public class BookStore
+	{
+	   private readonly static ConcurrentBag<Book> books=...();
+	   static BookStore()
+	   {
+	        books.Add(new Book{ID=1,Name="c++",Price=22});
+	        books.add(......)
+
+	   }
+	
+	   public IEnumerable<Book>GetAllBooks()
+	   {
+	      return books;
+	   }
+	   public void InserBook(Book book)
+	   {
+		books.Add(book);
+	   }
+	}
+	b.创建一个BookController
+	   public class   BookController:ApiController
+{
+	private readonly BookStore bookStore=new ..();
+	 
+	public IEnumerable<Book> Get()
+	{
+		return bookStore.GetAllBooks();
+	}
+	
+	public Book Get(int bookID)
+	{
+		return bookStore.GetAllBooks().Fir..(x=>x.ID==bookID);
+	}
+}
+授权服务器与webapi实现完成之后，再捋一下思路
+客户端请求webapi，首先要从授权服务器上拿到一个token，
+传递给webapi，webapi拿到token检验是不是授权服务器颁发的，是，接收，否，拒绝，这里就是检查这个token
+ 那么验证这个token，有专门的验证token库，是identityserver公司研发的
+ 所以在webapi上安装这个token包，因为在webapi上验证这个token
+Install-Package Thinktecture.IdentityModel.Owin.ResourceAuthorization.WebApi -Version 3.0.0
+ a.安装完成之后需要在webapi项目中的Startup中验证这个token	，
+ b.验证token还需要安装一个dll  Install-Package IdentityServer3.AccessTokenValidation -Version 2.15.1
+ c.拿到token请求webapi肯定会在请求头中追加这个token，然后会对请求头中的token验证
+     public void Configuration(IAppBuilder appBuilder)
+       	{
+	  appBuilder.UseIdentityServerBearerTokenAuthentication(new IdentityServerBearerTokenAuthenticationOptions{
+	//授权服务器地址，去哪儿验证？，授权范围是什么,验证模型是什么？终结点
+	Authority="http://localhost:5000",
+	RequiredScopes=new List<string>{"webapi1"},
+	ValidationMode=ValidationMode.ValidationEndpoint
+	//每次请求webapi都会去到授权服务器去验证
+	});
+
+	}
+  
+	  	
+四、创建一个客户端    OauthSample.Client
+1.通过客户端 访问请求webapi ，安装一个请求oauth2.0接口用的，微软写的
+
+ 安装 Install-Package IdentityModel -version 3.0.0
+2.在Main方法中写
+  搞一个token的客户端，token在哪儿申请？，有一个地址
+  TokenClient tokenclient=new TokenClient("http://localhost:5000/connect/token","lingdu","dfdfd");
+   TokenResponse tokenresult=  tokenclient.RequestClientCredentialsAsync("webapi1").Result;
+	HttpClient httpClient=new ...();
+	httpClient.SetBeareToken(tokenresult.AccessToken);
+var result=httpClient.GetStringAsync("http://localhost:6000/api/book").Result;
+console.write(result);
+console.readkey();
+
+项目启动顺序， 解决方案属性：
+
+认证服务器启动起来
+webapi启动起来
+客户端启动起来
+
+会发现能够返回数据
+如果在浏览器直接输入api地址，是否能够拿到数据呢？发现拿不到，没有授权，没有令牌，请求不到
+这里有一个问题，
+针对客户端，访问不同的api，那么需要对客户端指定一个角色
+是高级vip，还是普通vip呢？肯定是分了一个角色
+，那么实际上在配置的时候已经加过，在认证通过的时候，是属于什么角色
+
+认证服务器颁发token
+webapi决定角色有哪些权限，需要自己定义
+
+在webapi中添加一个类，假设是权限类，这里正常流程是从数据库获取的
+public class PermissionProvider
+{
+public List<Permission> permissions=new ...();
+	permissions.Add(new Permission{RoleName="role1",ActionName="GetAllBook"})//获得所有book
+	permissions.Add(new Permission{RoleName="role2",ActionName="GetBookByID"})//根据id访问
+	permissions.Add(new Permission{RoleName="role3",ResourceName="Book"})
+}
+public class Permission
+{
+//角色名称
+public string RoleName{get;set;}
+//资源名称【定义一些功能】
+public string ResourceName{get;set;}
+//方法名称
+public string ActionName{get;set;}
+}
+
+刚才安装了一个webapi的资源认证dll，那么就可以在webapi的action
+上打标记备注
+比如在 Get方法上打
+[ResourceAuthorize("GetAllBook","Book")]
+
+[ResourceAuthorize("GetBookID","Book")]
+
+[ResourceAuthorize("CreateBook","Book")]
+
+写一个授权管理器，继承 ResourceAuthorizationManager
+检查有没有权限访问api
+
+public calss AuthorizationManager:ResourceAuthorizationManager
+{
+public override Task<bool>CheckAccessAsync()
+{
+PermissionProvider permissionProvider=new ...();
+var permissions=permissionProvider.GetAllPermissions();
+
+if(permissions.Any(p=>context.Resource.Any(r=>r.Value=p.ResourceName&&context.Principal.HasClaim("client_role",p.RoleName))))
+{
+  return OK();
+}
+
+if(permissions.Any(p=>context.Action.Any(r=>r.Value=p.ActioneName&&context.Principal.HasClaim("client_role",p.RoleName))))
+{
+  return OK();
+}
+
+return NOK();
+}
+}
+
+写完之后需要在启动类中配置这个资源授权验证,那么在配置这个授权验证之前上面还写了一个认证token 的代码。
+在Startup类的Configuration方法中写
+appBuilder.UseResourceAuthorization(new AuthorizationManager());
+
+
+那么所有的都配置完了，运行起来查看效果，会发现返回403，那么说明没有授权，此时，可以讲授权管理器中配置一个有权限访问的资源即可
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
