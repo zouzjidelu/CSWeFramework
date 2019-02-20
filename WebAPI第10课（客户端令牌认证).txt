@@ -133,6 +133,8 @@ public class Clients
 c.添加一个类 Startup  
   寄宿api需要引入宿主的api库  
    install-package Microsoft.Owin.SelfHost
+   //配置token验证所依赖的库
+   Install-Package IdentityServer3.AccessTokenValidation -Version 2.14.0
 
 //启动时，运行这个类
 [assembly:OwinStartup(typeof(Startup))]   
