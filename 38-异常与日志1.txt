@@ -1,6 +1,6 @@
 ﻿一、创建异常项目演示,MVC,[ExceptionSample]
 
-vs-web --》IIS-->应用程序--》操作系统，异常一层一层往上抛，跑到最上层，windos都没处理异常,就发生蓝屏
+代码异常--找到try-如果没有try---找过滤器中的异常处理，----如果也没有----则找aplicationerror-----如果还没有----vs-web --》IIS-->应用程序--》操作系统，异常一层一层往上抛，跑到最上层，windos都没处理异常,就发生蓝屏
 
 添加一个类 Sample
 static void Test(string str){
