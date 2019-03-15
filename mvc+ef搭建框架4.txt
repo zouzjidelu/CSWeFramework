@@ -28,7 +28,15 @@
   然后将配置信息改成英文的
 
 9.在路由中的url可以配置一个语言的标致。根据zh-cn、 en-us 来识别不同的资源
-  url:"{lg}/{Controller/{action}}" 当请求过来判断lg，是什么语言文化版本
+  	url:"{lg}/{Controller/{action}}" 当请求过来判断lg，是什么语言文化版本
+
+	  //routes.MapRoute(
+            //    name: "Default",
+            //    url: "{lg}/{controller}/{action}/{id}",
+            //    defaults: new { lg="zh-cn", controller = "Car", action = "Index", id = UrlParameter.Optional }
+            //);
+
+
   这里需要扩展一个mvc过滤器。LanuageActionFilter,并实现IActionFilter过滤器接口
   实现OnActionExecuting()方法；
   1.找到路由中的lg； string lg= filterContext.RouteData.Values["lg"].tostring();
@@ -41,7 +49,9 @@
     //2.CurrentUICulture属性的默认值是操作系统用户界面语言。
 
 
-  3.当mvc启动的时候有一个filterconfig配置，将这个过滤器加入即可
+  3.在App_Start文件夹下有一个filterconfig配置，将这个过滤器加入即可
+	filters.Add(new LanuageActionFilter());
+
   4.运行项目，通过更改lg来查看中英文切换
 
 10.目前表单验证提示信息的属性和和元数据配置的不一样。应该和元数据名称一致。

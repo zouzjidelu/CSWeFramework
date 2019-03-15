@@ -25,7 +25,7 @@ Data类库
 
 数据库迁移需要设置web项目为启动项目
 然后进行数据库迁移，因为数据库连接字符串在web中
-数据库迁移
+数据库迁移指令应在Data层，因为data层有DbContext
 Enable-Migrations
 数据库更新
 Update-Database -Force
@@ -43,7 +43,7 @@ Web层
 
 每层都需要进行抽象，通过依赖注入的方式，
 ioc容器 
-Install-Package Unity.Mvc 4.0.1 到web
+Install-Package Unity.Mvc -Version 5.0.15 到web
 
 
 在Core,data,service,web中安装Unity容器,所有的容器都依赖unity
